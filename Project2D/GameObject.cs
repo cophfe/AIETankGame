@@ -13,7 +13,7 @@ namespace Project2D
 	{
 		#region Variables
 
-		const float convertToDegrees = (float)(180 / Math.PI);
+		
 		
 		//scene tree stuff
 		protected GameObject parent = null;
@@ -36,9 +36,13 @@ namespace Project2D
 		protected Vector2 scale;
 		protected float rotation;
 
+		//read only variables for drawing
+		private Vector2 globalPosition;
+		private float globalRotation;
+		private Vector2 globalScale;
+
 		//physics
 		protected bool hasPhysics = false;
-		protected Collider collider = null;
 
 		//id
 		static ulong idCounter = 0;
@@ -48,40 +52,38 @@ namespace Project2D
 		public GameObject()
 		{
 			
-			isDrawn = false;
 			hasPhysics = false;
-			collider = null;
+			
 
-
-			Init(null, Vector2.Zero, Vector2.One, 0, null, new Colour(0xFF, 0xFF, 0xFF, 0xFF));
+			Init(TextureName.None, Vector2.Zero, Vector2.One, 0, null, new Colour(0xFF, 0xFF, 0xFF, 0xFF), false);
 		}
 
-		public GameObject(string fileName, Vector2 position, Vector2 scale, float rotation = 0, GameObject parent = null)
+		public GameObject(TextureName image, Vector2 position, Vector2 scale, float rotation = 0, GameObject parent = null, bool isDrawn = true)
 		{
-			Init(fileName, position, scale, rotation, parent, new Colour(0xFF, 0xFF, 0xFF, 0xFF));
+			Init(image, position, scale, rotation, parent, new Colour(0xFF, 0xFF, 0xFF, 0xFF), isDrawn);
 		}
 
-		public GameObject(string fileName)
+		public GameObject(TextureName image)
 		{
-			Init(fileName, Vector2.Zero, Vector2.One, 0, null, new Colour(0xFF, 0xFF, 0xFF, 0xFF));
+			Init(image, Vector2.Zero, Vector2.One, 0, null, new Colour(0xFF, 0xFF, 0xFF, 0xFF), true);
 		}
 
-		void Init(string textureFile, Vector2 position, Vector2 scale, float rotation, GameObject parent, Colour colour)
+		protected void Init(TextureName image, Vector2 position, Vector2 scale, float rotation, GameObject parent, Colour colour, bool isDrawn = true)
 		{
+
+			this.isDrawn = isDrawn;
+
 			id = idCounter;
 			idCounter++;
-			if (textureFile != null)
-			{
-				isDrawn = true;
-				texture = LoadTexture(textureFile);
-
-				textureRectangle.width = texture.width;
-				textureRectangle.height = texture.height;
-				spriteRectangle.width = texture.width * scale.x;
-				spriteRectangle.height = texture.height * scale.y;
-				origin.x = spriteRectangle.width / 2;
-				origin.y = spriteRectangle.height / 2;
-			}
+			
+			texture = Game.GetTextureFromName(image);
+			textureRectangle.width = texture.width;
+			textureRectangle.height = texture.height;
+			spriteRectangle.width = texture.width * scale.x;
+			spriteRectangle.height = texture.height * scale.y;
+			origin.x = spriteRectangle.width / 2;
+			origin.y = spriteRectangle.height / 2;
+			
 			if (parent != null)
 				parent.addChild(this);
 
@@ -131,10 +133,16 @@ namespace Project2D
 
 		public virtual void Update(float deltaTime)
 		{
+
 			foreach (var child in children)
 			{
 				child.Update(deltaTime);
 			}
+		}
+
+		public virtual void LateUpdate(float deltaTime)
+		{
+
 		}
 
 		protected float id;
@@ -147,9 +155,7 @@ namespace Project2D
 			}
 		}
 
-		private Vector2 globalPosition;
-		private float globalRotation;
-		private Vector2 globalScale;
+		
 
 		public virtual void Draw()
 		{
@@ -166,7 +172,7 @@ namespace Project2D
 				spriteRectangle.x = globalPosition.x;
 				spriteRectangle.y = globalPosition.y;
 
-				DrawTexturePro(texture, textureRectangle, spriteRectangle, origin, globalRotation * convertToDegrees, colour);
+				DrawTexturePro(texture, textureRectangle, spriteRectangle, origin, globalRotation * Trig.rad2Deg, colour);
 			}
 
 

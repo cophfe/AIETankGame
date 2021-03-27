@@ -14,11 +14,16 @@ namespace Project2D
 
 		public static void AddObject(PhysicsObject obj)
 		{
-			objList.Add(obj);
+			if (obj.GetCollider() != null)
+				objList.Add(obj);
 		}
 
-		public static void CheckCollision()
+		public static void CheckCollisions()
 		{
+			for (int i = 0; i < objList.Count; i++)
+			{
+				objList[i].GetCollider().TransformByGlobalTransform();
+			}
 			for (int i = 0; i < objList.Count - 1; i++)
 			{
 				for (int j = i + 1; j < objList.Count; j++)
@@ -68,11 +73,7 @@ namespace Project2D
 		
 	}
 
-	struct AABB
-	{
-		Vector2 topLeft;
-		Vector2 bottomRight;
-	}
+	
 
 	struct CollisionPair
 	{

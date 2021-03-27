@@ -16,42 +16,35 @@ namespace Project2D
 		static float accelerationCap = 1500;
 		static float rotateAcceleration = 10;
 
-		const float movementFasterAddition = 100f;
+		const float velocityFasterAddition = 100f;
+		const float accelerationFasterAddition = 500f;
 
-		public Player(string fileName, Vector2 position, Vector2 scale, float rotation, Scene scene) : base(fileName, position, scale, null, 0f, 3f, 0, 0, scene)
+		public Player(TextureName fileName, TextureName armName, Vector2 armOffset, Vector2 armScale, Vector2 position, Vector2 scale, float rotation, Scene scene, PolygonCollider collider) : base(fileName, position, scale, collider, 0f, 3f, 0f, 0f, scene, 1)
 		{
-
+			new Arm(armName, armOffset, armScale, 0, this);
 		}
 
 		Vector2 inputVelocity;
 		Vector2 inputDirection = Vector2.Zero;
-		bool isMoving = false;
 
 		public override void Update(float deltaTime)
 		{
-			isMoving = false;
 			inputDirection = Vector2.Zero;
-
 			if (IsKeyDown(KeyboardKey.KEY_W))
 			{
 				inputDirection -= Vector2.Up;
-				
-				isMoving = true;
 			}
 			if (IsKeyDown(KeyboardKey.KEY_S))
 			{
 				inputDirection += Vector2.Up;
-				isMoving = true;
-			}
-			if (IsKeyDown(KeyboardKey.KEY_D))
-			{
-				inputDirection += Vector2.Right;
-				isMoving = true;
 			}
 			if (IsKeyDown(KeyboardKey.KEY_A))
 			{
 				inputDirection -= Vector2.Right;
-				isMoving = true;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_D))
+			{
+				inputDirection += Vector2.Right;
 			}
 			if (IsKeyDown(KeyboardKey.KEY_E))
 			{
@@ -64,18 +57,19 @@ namespace Project2D
 					angularVelocity += rotateAcceleration * deltaTime;
 			}
 
-
 			if (IsKeyPressed(KeyboardKey.KEY_LEFT_SHIFT))
 			{
-				velocityCap += movementFasterAddition;
+				velocityCap += velocityFasterAddition;
+				accelerationCap += accelerationFasterAddition;
 			}
 			if (IsKeyReleased(KeyboardKey.KEY_LEFT_SHIFT))
 			{
-				velocityCap -= movementFasterAddition;
-			}
+				velocityCap -= velocityFasterAddition;
+				accelerationCap -= accelerationFasterAddition;
+			}			
 
 			inputVelocity = (inputDirection.Normalised() * velocityCap - velocity).Normalised() * (accelerationCap * deltaTime);
-			velocity += inputVelocity;
+			AddVelocity(inputVelocity);
 
 			base.Update(deltaTime);
 		}

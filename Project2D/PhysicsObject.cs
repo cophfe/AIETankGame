@@ -16,12 +16,13 @@ namespace Project2D
 
 		//protected Vector2 position;
 		protected Vector2 velocity;
-		protected Vector2 acceleration;
+		protected Vector2 force;
 		protected float angularVelocity;
 		protected float angularDrag;
 		protected float torque;
 
 		public float restitution;
+		public float density;
 		public float drag = 0f;
 		protected float mass;
 		public float iMass;
@@ -30,38 +31,50 @@ namespace Project2D
 
 		public float gravity = 0;
 
-		public PhysicsObject(string fileName, Vector2 position, Vector2 scale, Collider collider = null, float drag = 0, float angularDrag = 0, float restitution = 0,  float rotation = 0, GameObject parent = null) : base(fileName, position, scale, rotation, parent)
+		public PhysicsObject(TextureName image, Vector2 position, Vector2 scale, Collider collider = null, float drag = 0, float angularDrag = 0, float restitution = 0,  float rotation = 0, GameObject parent = null, float density = 1, float mass = float.NaN) : base(image, position, scale, rotation, parent)
 		{
 			hasPhysics = true;
 			this.collider = collider;
 			this.restitution = restitution;
 			this.drag = drag;
 			this.angularDrag = angularDrag;
-			if (collider != null) 
+			this.density = density;
+			this.mass = mass;
+
+			if (collider == null)
 			{
-				mass = this.collider.GetMass();
-				iMass = 1 / mass;
+				if (float.IsNaN(mass))
+				{
+					this.mass = 1;
+				}
 			}
 			else
 			{
-				mass = 1;
-				iMass = 1;
+				collider.SetConnectedPhysicsObject(this);
+				if (float.IsNaN(mass))
+					this.mass = this.collider.GetMass();
+
 			}
-				
-			
-			
+			iMass = 1/this.mass;
+
 		}
 
-		public PhysicsObject(string fileName = null) : base(fileName)
+		public PhysicsObject(TextureName image) : base(image)
 		{
 			collider = null;
 			drag = 0;
 
 		}
 
-		public void Init(Collider collider, float drag, float restitution, float rotation)
-		{
 
+		public Collider GetCollider()
+		{
+			return collider;
+		}
+
+		public void SetCollider(Collider collider)
+		{
+			this.collider = collider;
 		}
 
 		// NOTE:
@@ -73,11 +86,11 @@ namespace Project2D
 
 		public Vector2 GetAcceleration()
 		{
-			return acceleration;
+			return force;
 		}
 		public void AddAcceleration(Vector2 a)
 		{
-			acceleration += a;
+			force += a;
 		}
 		public Vector2 GetVelocity()
 		{
@@ -92,19 +105,17 @@ namespace Project2D
 		{
 			if (hasPhysics)
 			{
-				acceleration.y -= gravity * iMass;
 
-				velocity.x += acceleration.x * deltaTime;
-				velocity.y += acceleration.y * deltaTime;
-				velocity -= velocity * drag * deltaTime;
+				AddVelocity(force * deltaTime * iMass);
+				AddVelocity(velocity * drag * -deltaTime * iMass);
 				angularVelocity -= angularVelocity * angularDrag * deltaTime;
 				//position.x += (velocity.x - velocity.x * drag) * deltaTime;
 				//position.y += (velocity.y - velocity.y * drag) * deltaTime;
 				AddPosition(velocity * deltaTime);
 				AddRotation((angularVelocity) * deltaTime);
 			}
-			acceleration.x = 0;
-			acceleration.y = 0;
+			force.x = 0;
+			force.y = 0;
 			base.Update(deltaTime);
 		}
 	}

@@ -30,6 +30,10 @@ namespace Project2D
 			{
 				child.Update(deltaTime);
 			}
+			foreach (var child in children)
+			{
+				child.LateUpdate(deltaTime);
+			}
 		}
 
 		public override void UpdateTransforms()
