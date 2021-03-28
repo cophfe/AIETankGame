@@ -20,10 +20,12 @@ namespace Project2D
 		{
 			
 
-			Vector2 toMouse = Game.camera.GetMouseWorldPosition() - GlobalPosition;
-			float armRot = GlobalRotation;
-
-			GlobalRotation = -toMouse.GetAngle(Vector2.Right); //GlobalRotation + toMouse.GetAngle(new Vector2(globalTransform.m11, globalTransform.m12).Normalised());
+			Vector2 toMouse = (Game.camera.GetMouseWorldPosition() - GlobalPosition).Normalised();
+			
+			GlobalRotation = (-GlobalRotation - toMouse.GetAngle(globalTransform.GetRightVector()));
+			//-toMouse.GetAngle(Vector2.Right);
+			if (float.IsNaN(rotation))
+				Console.WriteLine("AAAAAHHHH");
 
 			base.Update(deltaTime);
 		}

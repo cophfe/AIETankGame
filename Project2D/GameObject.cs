@@ -209,6 +209,7 @@ namespace Project2D
 		public void AddRotation(float rad)
 		{
 			rotation += rad;
+			rotation %= Trig.pi * 2;
 		}
 
 		public void AddPosition(Vector2 pos)
@@ -256,6 +257,7 @@ namespace Project2D
 				}
 				rotation = -(localTransform * globalTransform.Inverse() * Matrix3.GetRotateZ(value)).GetZRotation();
 				//It is worrying that this requires a negative to be correct
+				rotation %= Trig.pi * 2;
 			}
 		}
 
@@ -268,6 +270,7 @@ namespace Project2D
 			set
 			{
 				rotation = value;
+				rotation %= Trig.pi * 2;
 			}
 		}
 

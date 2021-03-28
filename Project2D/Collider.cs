@@ -13,6 +13,7 @@ namespace Project2D
 	{
 		protected PhysicsObject connected;
 		protected ObjectType type;
+		protected Matrix3 globalTransform;
 
 		public ObjectType GetType()
 		{
@@ -44,11 +45,13 @@ namespace Project2D
 
 		public override AABB GetAABB()
 		{
-			return new AABB(midPointTransformed.y + radius, midPointTransformed.x - radius, midPointTransformed.y - radius, midPointTransformed.x + radius);
+			Vector2 position = globalTransform.GetTranslation();
+			return new AABB(midPointTransformed.y + radius + position.y, midPointTransformed.x - radius + position.x, midPointTransformed.y - radius + position.y, midPointTransformed.x + radius + position.x);
 		}
 
 		public override void TransformByGlobalTransform()
 		{
+			globalTransform = connected.GetGlobalTransform();
 			midPointTransformed = connected.GetGlobalTransform() * midPoint;
 		}
 
@@ -71,15 +74,32 @@ namespace Project2D
 
 		public override AABB GetAABB()
 		{
+			Vector2 position = globalTransform.GetTranslation();
+
+			float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
+			float minY = float.PositiveInfinity, maxY = float.NegativeInfinity;
+			for (int i = 0; i < pointsTransformed.Length; i++)
+			{
+				maxX = pointsTransformed[i].x > maxX ? pointsTransformed[i].x : maxX; 
+				minX = pointsTransformed[i].x < minX ? pointsTransformed[i].x : minX; 
+				
+				maxY = pointsTransformed[i].y > maxY ? pointsTransformed[i].y : maxY; 
+				minY = pointsTransformed[i].y < minY ? pointsTransformed[i].y : minY; 
+			}
+			return new AABB(maxY + position.y, minX + position.x, minY + position.y, maxX + position.x);
+		}
+
+		public static AABB GetAABB(Vector2[] points)
+		{
 			float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
 			float minY = float.PositiveInfinity, maxY = float.NegativeInfinity;
 			for (int i = 0; i < points.Length; i++)
 			{
-				maxX = points[i].x < maxX ? maxX : points[i].x; 
-				minX = points[i].x > minX ? minX : points[i].x; 
-				
-				maxY = points[i].y < maxY ? maxY : points[i].y; 
-				minY = points[i].y > minY ? minY : points[i].y; 
+				maxX = points[i].x > maxX ? points[i].x : maxX;
+				minX = points[i].x < minX ? points[i].x : minX;
+
+				maxY = points[i].y > maxY ? points[i].y : maxY;
+				minY = points[i].y < minY ? points[i].y : minY;
 			}
 			return new AABB(maxY, minX, minY, maxX);
 		}
@@ -101,25 +121,25 @@ namespace Project2D
 
 		public override void TransformByGlobalTransform()
 		{
-			Matrix3 m = connected.GetGlobalTransform();
+			globalTransform = connected.GetGlobalTransform();
 			pointsTransformed = new Vector2[points.Length];
 
 			for (int i = 0; i < points.Length; i++)
 			{
-				pointsTransformed[i] = m * points[i];
+				pointsTransformed[i] = globalTransform * points[i];
 			}
 		}
 	}
 
 	struct AABB
 	{
-		Vector2 topLeft;
-		Vector2 bottomRight;
+		public Vector2 topLeft;
+		public Vector2 bottomRight;
 
 		public AABB(float top, float left, float bottom, float right)
 		{
-			topLeft = new Vector2(top, left);
-			bottomRight = new Vector2(bottom, right);
+			topLeft = new Vector2(left, top);
+			bottomRight = new Vector2(right, bottom);
 		}
 
 		public AABB(Vector2 topLeft, Vector2 bottomRight)
