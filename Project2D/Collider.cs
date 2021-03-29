@@ -61,15 +61,32 @@ namespace Project2D
 		}
 	}
 
-	class PolygonCollider : Collider
+	class RectangleCollider : Collider
 	{
-		Vector2[] points;
-		public Vector2[] pointsTransformed;
+		Vector2[] localPoints = new Vector2[4];
+		Vector2[] globalPoints = new Vector2[4];
 
-		public PolygonCollider(Vector2[] points)
+		public RectangleCollider(float left, float top, float width, float height)
 		{
 			type = ObjectType.Polygon;
-			this.points = points;
+			localPoints = new Vector2[4]
+			{
+				new Vector2(left, top),
+				new Vector2(left + width, top),
+				new Vector2(left + width, top + height),
+				new Vector2(left, top + height),
+			};
+		}
+
+		public static RectangleCollider FromTexture(Texture2D texture)
+		{
+			return new RectangleCollider(-texture.width / 2, -texture.height / 2, -texture.width, -texture.height);
+		}
+
+		public static RectangleCollider FromTextureName(TextureName textureName)
+		{
+			Texture2D texture = Game.GetTextureFromName(textureName);
+			return new RectangleCollider(-texture.width / 2, -texture.height / 2, texture.width, texture.height);
 		}
 
 		public override AABB GetAABB()
@@ -78,18 +95,74 @@ namespace Project2D
 
 			float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
 			float minY = float.PositiveInfinity, maxY = float.NegativeInfinity;
-			for (int i = 0; i < pointsTransformed.Length; i++)
+			for (int i = 0; i < globalPoints.Length; i++)
 			{
-				maxX = pointsTransformed[i].x > maxX ? pointsTransformed[i].x : maxX; 
-				minX = pointsTransformed[i].x < minX ? pointsTransformed[i].x : minX; 
+				maxX = globalPoints[i].x > maxX ? globalPoints[i].x : maxX; 
+				minX = globalPoints[i].x < minX ? globalPoints[i].x : minX; 
 				
-				maxY = pointsTransformed[i].y > maxY ? pointsTransformed[i].y : maxY; 
-				minY = pointsTransformed[i].y < minY ? pointsTransformed[i].y : minY; 
+				maxY = globalPoints[i].y > maxY ? globalPoints[i].y : maxY; 
+				minY = globalPoints[i].y < minY ? globalPoints[i].y : minY; 
 			}
 			return new AABB(maxY + position.y, minX + position.x, minY + position.y, maxX + position.x);
 		}
 
-		public static AABB GetAABB(Vector2[] points)
+		public override float GetMass()
+		{
+			//float area = 0;
+			//int j = 0;
+			//for (int i = 0; i < localPoints.Length; i++)
+			//{
+			//	++j;
+			//	j %= localPoints.Length;
+			//	//mass += 0.5f * (points[i + 1] - points[i]).Magnitude() * new Vector2(points[i].x * (0.5f - points[i+1].x), points[i].y * (0.5f - points[i + 1].y)).Magnitude();
+			//	//Equation for area of a triangle (the third point is zero zero) 
+			//	area += 0.5f * (float)Math.Abs(localPoints[i].x * localPoints[j].y - localPoints[j].x * localPoints[i].y);
+			//}
+			float area = (float)Math.Abs((localPoints[0].x - localPoints[2].x) * (localPoints[0].y - localPoints[2].y));
+			return area * connected.density;
+		}
+
+		public override void TransformByGlobalTransform()
+		{
+			globalTransform = connected.GetGlobalTransform();
+			globalPoints = new Vector2[localPoints.Length];
+
+			for (int i = 0; i < localPoints.Length; i++)
+			{
+				globalPoints[i] = globalTransform * localPoints[i];
+			}
+		}
+
+		public Vector2[] GetGlobalPoints()
+		{
+			return globalPoints;
+		}
+	}
+
+	struct AABB
+	{
+		public Vector2 topLeft;
+		public Vector2 bottomRight;
+		public Vector2 halfWidth;
+		public Vector2 halfHeight;
+
+		public AABB(float top, float left, float bottom, float right)
+		{
+			topLeft = new Vector2(left, top);
+			bottomRight = new Vector2(right, bottom);
+			halfWidth = new Vector2((right - left) / 2, 0);
+			halfHeight = new Vector2(0, (bottom - top) / 2);
+		}
+
+		public AABB(Vector2 topLeft, Vector2 bottomRight)
+		{
+			this.topLeft = topLeft;
+			this.bottomRight = bottomRight;
+			halfWidth = new Vector2((bottomRight.x - topLeft.x) / 2, 0);
+			halfHeight = new Vector2(0, (bottomRight.y - topLeft.y) / 2);
+		}
+
+		public static AABB GetAABBFromPoints(Vector2[] points)
 		{
 			float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
 			float minY = float.PositiveInfinity, maxY = float.NegativeInfinity;
@@ -103,51 +176,6 @@ namespace Project2D
 			}
 			return new AABB(maxY, minX, minY, maxX);
 		}
-
-		public override float GetMass()
-		{
-			float area = 0;
-			int j = 0;
-			for (int i = 0; i < points.Length; i++)
-			{
-				++j;
-				j %= points.Length;
-				//mass += 0.5f * (points[i + 1] - points[i]).Magnitude() * new Vector2(points[i].x * (0.5f - points[i+1].x), points[i].y * (0.5f - points[i + 1].y)).Magnitude();
-				//Equation for area of a triangle (the third point is zero zero) 
-				area += 0.5f * (float)Math.Abs(points[i].x * points[j].y - points[j].x * points[i].y);
-			}
-			return area * connected.density;
-		}
-
-		public override void TransformByGlobalTransform()
-		{
-			globalTransform = connected.GetGlobalTransform();
-			pointsTransformed = new Vector2[points.Length];
-
-			for (int i = 0; i < points.Length; i++)
-			{
-				pointsTransformed[i] = globalTransform * points[i];
-			}
-		}
-	}
-
-	struct AABB
-	{
-		public Vector2 topLeft;
-		public Vector2 bottomRight;
-
-		public AABB(float top, float left, float bottom, float right)
-		{
-			topLeft = new Vector2(left, top);
-			bottomRight = new Vector2(right, bottom);
-		}
-
-		public AABB(Vector2 topLeft, Vector2 bottomRight)
-		{
-			this.topLeft = topLeft;
-			this.bottomRight = bottomRight;
-		}
-
 
 	}
 

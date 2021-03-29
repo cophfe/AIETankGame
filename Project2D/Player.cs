@@ -19,7 +19,7 @@ namespace Project2D
 		const float velocityFasterAddition = 100f;
 		const float accelerationFasterAddition = 500f;
 
-		public Player(TextureName fileName, TextureName armName, Vector2 armOffset, Vector2 armScale, Vector2 position, Vector2 scale, float rotation, Scene scene, PolygonCollider collider) : base(fileName, position, scale, collider, 0f, 3f, 0f, 0f, scene, 1)
+		public Player(TextureName fileName, TextureName armName, Vector2 armOffset, Vector2 armScale, Vector2 position, Vector2 scale, float rotation, Scene scene, RectangleCollider collider) : base(fileName, position, scale, collider, 0f, 3f, 0f, 0f, scene, 1)
 		{
 			new Arm(armName, armOffset, armScale, 0, this);
 		}
@@ -68,6 +68,7 @@ namespace Project2D
 				accelerationCap -= accelerationFasterAddition;
 			}			
 
+			//make it so this can't overshoot wanted value (inputdirection * velocityCap - velocity)
 			inputVelocity = (inputDirection.Normalised() * velocityCap - velocity).Normalised() * (accelerationCap * deltaTime);
 			AddVelocity(inputVelocity);
 

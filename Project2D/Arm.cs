@@ -11,6 +11,8 @@ namespace Project2D
 {
 	class Arm : GameObject
 	{
+		const float armSpeed = 15;
+
 		public Arm(TextureName image, Vector2 offset, Vector2 scale, float rotation, GameObject player) : base(image, offset, scale, rotation, player)
 		{
 
@@ -20,9 +22,11 @@ namespace Project2D
 		{
 			
 
-			Vector2 toMouse = (Game.camera.GetMouseWorldPosition() - GlobalPosition).Normalised();
-			
-			GlobalRotation = (-GlobalRotation - toMouse.GetAngle(globalTransform.GetRightVector()));
+			Vector2 targetVector = (Game.camera.GetMouseWorldPosition() - GlobalPosition).Normalised();
+			float angleBetween = (float)Math.Atan2(Vector2.Dot(targetVector, globalTransform.GetForwardVector()), Vector2.Dot(targetVector, globalTransform.GetRightVector()));
+			LocalRotation -= angleBetween * Math.Min(deltaTime * armSpeed, 1);
+
+			//GlobalRotation = EaseCircInOut(deltaTime,  )
 			//-toMouse.GetAngle(Vector2.Right);
 			if (float.IsNaN(rotation))
 				Console.WriteLine("AAAAAHHHH");

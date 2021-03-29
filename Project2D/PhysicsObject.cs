@@ -53,7 +53,7 @@ namespace Project2D
 				collider.SetConnectedPhysicsObject(this);
 				if (float.IsNaN(mass))
 					this.mass = this.collider.GetMass();
-
+				CollisionManager.AddObject(this);
 			}
 			iMass = 1/this.mass;
 
@@ -63,7 +63,7 @@ namespace Project2D
 		{
 			collider = null;
 			drag = 0;
-
+			
 		}
 
 
@@ -72,9 +72,21 @@ namespace Project2D
 			return collider;
 		}
 
-		public void SetCollider(Collider collider)
+		public void SetCollider(Collider collider, bool recalculateMass = false)
 		{
 			this.collider = collider;
+			if (recalculateMass)
+			{
+				mass = collider.GetMass();
+				iMass = 1 / mass;
+			}
+			CollisionManager.AddObject(this);
+		}
+
+		public void RemoveCollider()
+		{
+			this.collider = null;
+			CollisionManager.AddObject(this);
 		}
 
 		// NOTE:
@@ -84,11 +96,11 @@ namespace Project2D
 		// ^  ^ Up vector
 		// Right Vector
 
-		public Vector2 GetAcceleration()
+		public Vector2 GetForce()
 		{
 			return force;
 		}
-		public void AddAcceleration(Vector2 a)
+		public void AddForce(Vector2 a)
 		{
 			force += a;
 		}
@@ -107,15 +119,12 @@ namespace Project2D
 			{
 
 				AddVelocity(force * deltaTime * iMass);
-				AddVelocity(velocity * drag * -deltaTime * iMass);
+				AddVelocity(velocity * Math.Min(1,-drag * deltaTime) * iMass);
 				angularVelocity -= angularVelocity * angularDrag * deltaTime;
-				//position.x += (velocity.x - velocity.x * drag) * deltaTime;
-				//position.y += (velocity.y - velocity.y * drag) * deltaTime;
 				AddPosition(velocity * deltaTime);
-				AddRotation((angularVelocity) * deltaTime);
+				AddRotation((angularVelocity) * Math.Min(deltaTime,1));
 			}
-			force.x = 0;
-			force.y = 0;
+			force = Vector2.Zero;
 			base.Update(deltaTime);
 		}
 	}
