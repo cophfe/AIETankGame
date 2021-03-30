@@ -11,7 +11,7 @@ namespace Project2D
 {
 	static class CollisionManager
 	{
-		delegate Vector2 GetCollisionVector( CollisionPair pair);
+		delegate void GetCollisionVector( CollisionPair pair, out float penetration, out Vector2 collisionNormal);
 		static GetCollisionVector[] getCollisionVector = new GetCollisionVector[]
 		{
 			GetCollisionCircles,
@@ -34,9 +34,10 @@ namespace Project2D
 
 		public static void CheckCollisions()
 		{
+			collisions.Clear();
 			for (int i = 0; i < objList.Count; i++)
 			{
-				objList[i].GetCollider().TransformByGlobalTransform();
+				objList[i].GetCollider().UpdateGlobalPoints();
 			}
 
 			for (int i = 0; i < objList.Count - 1; i++)
@@ -53,134 +54,190 @@ namespace Project2D
 
 			for (int i = 0; i < collisions.Count(); i++)
 			{
-				Vector2 normal = getCollisionVector[(int)collisions[i].type](collisions[i]);
-				collisions[i] = new CollisionPair(collisions[i].a, collisions[i].b, normal, collisions[i].type);
-				if (collisions[i].normal != Vector2.Zero)
-				{
-					ResolveCollision(collisions[i]);
-					Console.WriteLine($"{collisions[i].normal.x}, {collisions[i].normal.y}");
-				}
+				ResolveCollision(collisions[i]);
 			}
 		}
-
+		public static Vector2 drawVector = new Vector2(0, 0);
+		public static GameObject obj;
 		public static void ResolveCollision(CollisionPair pair)
 		{
-
+			Vector2 normal;
+			float penetration;
+			getCollisionVector[(int)pair.type](pair, out penetration, out normal);
+			if (penetration == 0)
+				return;
 			Vector2 rV = pair.b.GetVelocity() - pair.a.GetVelocity();
+			float dot = Vector2.Dot(rV, normal);
+
+			if (dot > 0)
+				return;
 
 			float elasticity = Math.Min(pair.a.restitution, pair.b.restitution);
 			float friction;
 
-			float impulseMagnitude = (-(1 + elasticity) * Vector2.Dot(rV, pair.normal)) / (pair.a.iMass + pair.b.iMass);
-			Vector2 impulse = pair.normal * impulseMagnitude;
-
+			float impulseMagnitude = penetration* (-(elasticity) * dot) * (pair.a.mass + pair.b.mass);
+			Vector2 impulse = normal * impulseMagnitude;
+			drawVector = normal * penetration;
+			obj = pair.a;
+			
 			if (pair.a.iMass != -1)
-				pair.a.AddVelocity(impulse * -pair.a.iMass);
+			{
+				pair.a.AddPosition(-penetration * normal);
+				pair.a.AddForce(impulse * -pair.a.iMass);
+			}
 
 			if (pair.b.iMass != -1)
-				pair.b.AddVelocity(impulse * pair.b.iMass);
+			{
+				pair.b.AddPosition(penetration * normal);
+				pair.b.AddForce(impulse * pair.b.iMass);
+			}
+
+			//Vector2 position = pair.a.GlobalPosition;
+			//DrawLine((int)position.x + 50, (int)position.y + 50, (int)(position.x + normal.x * penetration) + 50, (int)(position.y + normal.y * penetration) + 50, RLColor.PURPLE);
+		}
+		
+		const float percent = 0.6f;
+		public static void CorrectPosition(CollisionPair pair)
+		{
+			Vector2 correction = pair.normal / (pair.a.iMass + pair.b.iMass) * percent * pair.normal;
+			pair.a.AddPosition(-pair.a.iMass * correction);
+			pair.b.AddPosition(pair.b.iMass * correction);
 		}
 
 		public static bool CheckAABB(AABB a, AABB b)
 		{
 			return (a.topLeft.x < b.bottomRight.x && a.bottomRight.x > b.topLeft.x && a.bottomRight.y < b.topLeft.y && a.topLeft.y > b.bottomRight.y);
 		}
-		
-		public static Vector2 GetCollisionRectangles(CollisionPair pair)
+
+		public static void GetCollisionRectangles(CollisionPair pair, out float penetration, out Vector2 collisionNormal)
 		{
 			//This is a simplified version of SAT that only works with rectangles
-			
-			Vector2[] aPoints = (pair.a.GetCollider() as RectangleCollider).GetGlobalPoints();
-			Vector2[] bPoints = (pair.b.GetCollider() as RectangleCollider).GetGlobalPoints();
+			//It should be way, way faster (no loops!)
+			//however it probably isn't for some reason.
+			RectangleCollider aCol = (pair.a.GetCollider() as RectangleCollider);
+			RectangleCollider bCol = (pair.b.GetCollider() as RectangleCollider);
+			Vector2 aHalfWidth = aCol.GetHalfWidthVector();
+			Vector2 aHalfHeight = aCol.GetHalfHeightVector();
+			Vector2 aCentre = aCol.GetCentrePoint();
+			Vector2 bHalfWidth = bCol.GetHalfWidthVector();
+			Vector2 bHalfHeight = bCol.GetHalfHeightVector();
+			Vector2 bCentre = bCol.GetCentrePoint();
 
 
 			Matrix3 aTransform = pair.a.GetGlobalTransform();
 			Matrix3 bTransform = pair.b.GetGlobalTransform();
-			Vector2[] axisAligned = aPoints, notAligned = bPoints;
 
-			Vector2 axisAlignedPos = aTransform.GetTranslation();
-			Vector2 unAlignedPos = bTransform.GetTranslation();
 
-			bool b = false;
+			Vector2 normal = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
 			Vector2 axis = aTransform.GetRightVector();
+			float pValue = float.PositiveInfinity;
+			float pV;
+			float a;
+			float b;
+			//A X Axis
+			///////////////////////////////////////////////////////////////////
+			if (!doPA(aTransform.GetRightVector()))
+			{
+				penetration = 0;
+				collisionNormal = Vector2.Zero;
+				return;
+			}
+			//A Y Axis
+			//////////////////////////////////////////////////////////////////
+			if (!doPA(aTransform.GetForwardVector()))
+			{
+				penetration = 0;
+				collisionNormal = Vector2.Zero;
+				return;
+			}
+			//B X Axis
+			//////////////////////////////////////////////////////////////////
+			if (!doPB(bTransform.GetRightVector()))
+			{
+				penetration = 0;
+				collisionNormal = Vector2.Zero;
+				return;
+			}
+			//B Y Axis
+			//////////////////////////////////////////////////////////////////
+			if (!doPB(bTransform.GetForwardVector()))
+			{
+				penetration = 0;
+				collisionNormal = Vector2.Zero;
+				return;
+			}
+			//////////////////////////////////////////////////////////////////
 			
-			Vector2 pValue = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
-			for (int i = 0; i < 4; i++)
-			{			
-				switch (i)
+			collisionNormal = normal;
+			penetration = pValue;
+			return;
+
+			bool doPA(Vector2 ax)
+			{
+				float aW = ax.Dot(aHalfWidth);
+				float aH = ax.Dot(aHalfHeight);
+
+				float bH = ax.Dot(bHalfHeight * Math.Sign(bHalfHeight.Dot(ax)));
+				float bW = ax.Dot(bHalfWidth * Math.Sign(bHalfWidth.Dot(ax)));
+
+				a = ax.Dot(aCentre);
+				b = ax.Dot(bCentre);
+
+				pV = (((aW + aH) + (bH + bW)) - Math.Abs(a - b));
+
+				if (pV > 0)
 				{
-					case 0:
-						axis = aTransform.GetRightVector();
-
-						break;
-
-					case 1:
-						axis = aTransform.GetForwardVector();
-						break;
-
-					case 2:
-						axis = bTransform.GetRightVector();
-						b = true;
-						notAligned = aPoints;
-						axisAligned = bPoints;
-						unAlignedPos = axisAlignedPos;
-						axisAlignedPos = bTransform.GetTranslation();
-						break;
-
-					case 3:
-						axis = bTransform.GetForwardVector();
-
-						break;
-				}
-				//For our purposes, the only axis we need to test are the forward and right vectors inside of the global transform. No stored normals are needed.
-				
-
-				 //one P value for each axis. The smallest one will be used for the collision vector
-			
-				//SAT works by projecting all points onto a polygon's face's tangent vector, and checking 1 dimentionally, if 
-
-				//The top and bottom of A is guaranteed to be from these points because of how I guaranteed the points will be organised inside of RectangleCollider
-				float fixedMin = axis.Dot(axisAligned[0] + axisAlignedPos);
-				float fixedMax= axis.Dot(axisAligned[2] + axisAlignedPos);
-
-				//find the minimum and maximum values of B projected onto
-				float variableMin = float.PositiveInfinity;
-				float variableMax = float.NegativeInfinity;
-			
-				for (int j = 0; j < 4; j++)
-				{
-					//Project unaligned points point onto axis
-					float projected = axis.Dot(notAligned[j] + unAlignedPos);
-
-					//find min and max value of projected
-					variableMin = projected < variableMin ? projected : variableMin;
-					variableMax = projected > variableMax ? projected : variableMax;
-				}
-
-				if (variableMax > fixedMin && fixedMax > variableMin)
-				{
-					float cached = fixedMax < variableMax ? fixedMax - variableMin : variableMax - fixedMin;
-
-					if (cached * cached < pValue.MagnitudeSquared())
-						pValue = cached * axis;
+					if (pV < Math.Abs(pValue))
+					{
+						pValue = pV; 
+						normal = ax * Math.Sign(b-a);
+					}
+					return true;
 				}
 				else
 				{
-					return Vector2.Zero; // is not colliding
+					//not colliding
+					return false;
 				}
 			}
-			return pValue;
 
+			bool doPB(Vector2 ax)
+			{
+				float aW = ax.Dot(aHalfWidth * Math.Sign(aHalfWidth.Dot(ax)));
+				float aH = ax.Dot(aHalfHeight * Math.Sign(aHalfHeight.Dot(ax)));
 
+				float bH = ax.Dot(bHalfHeight);
+				float bW = ax.Dot(bHalfWidth);
 
+				a = ax.Dot(bCentre);
+				b = ax.Dot(aCentre);
+
+				pV = (((aW + aH) + (bH + bW)) - Math.Abs(a - b));
+
+				if (pV > 0)
+				{
+					
+					if (pV < Math.Abs(pValue))
+					{
+						pValue = pV;
+						normal = ax * Math.Sign(a - b);
+					}
+					return true;
+				}
+				else
+				{
+					//not colliding
+					return false;
+				}
+			}
 		}
 
-		public static Vector2 GetCollisionPolygonCircle(CollisionPair pair)
+		public static void GetCollisionPolygonCircle(CollisionPair pair, out float penetration, out Vector2 collisionNormal)
 		{
 			throw new NotImplementedException();
 		}
 
-		public static Vector2 GetCollisionCircles(CollisionPair pair)
+		public static void GetCollisionCircles(CollisionPair pair, out float penetration, out Vector2 collisionNormal)
 		{
 			throw new NotImplementedException();
 		}
@@ -191,6 +248,7 @@ namespace Project2D
 		public PhysicsObject a;
 		public PhysicsObject b;
 		public Vector2 normal;
+		//public float pDepth
 		public CollisionType type;
 
 		public CollisionPair(PhysicsObject a, PhysicsObject b, Vector2 cNorm, CollisionType type)

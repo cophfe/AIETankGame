@@ -24,7 +24,7 @@ namespace Project2D
 		public float restitution;
 		public float density;
 		public float drag = 0f;
-		protected float mass;
+		public float mass;
 		public float iMass;
 		protected float inetia;
 		protected float iInetia;
@@ -45,14 +45,14 @@ namespace Project2D
 			{
 				if (float.IsNaN(mass))
 				{
-					this.mass = 1;
+					this.mass = collider.GetMass();
 				}
 			}
 			else
 			{
 				collider.SetConnectedPhysicsObject(this);
 				if (float.IsNaN(mass))
-					this.mass = this.collider.GetMass();
+					this.mass = 1;
 				CollisionManager.AddObject(this);
 			}
 			iMass = 1/this.mass;
@@ -117,14 +117,17 @@ namespace Project2D
 		{
 			if (hasPhysics)
 			{
+				velocity += force * (deltaTime * iMass);
+				AddVelocity((force - velocity * drag)* deltaTime * iMass);
+				//AddVelocity(velocity * Math.Min(1,-drag * deltaTime) * iMass);
+				position += (velocity * deltaTime);
 
-				AddVelocity(force * deltaTime * iMass);
-				AddVelocity(velocity * Math.Min(1,-drag * deltaTime) * iMass);
+				//angularVelocity += (float)(torque * iInertia * deltaTime);
 				angularVelocity -= angularVelocity * angularDrag * deltaTime;
-				AddPosition(velocity * deltaTime);
-				AddRotation((angularVelocity) * Math.Min(deltaTime,1));
+
+				rotation += (angularVelocity) * deltaTime;
+				force = Vector2.Zero;
 			}
-			force = Vector2.Zero;
 			base.Update(deltaTime);
 		}
 	}

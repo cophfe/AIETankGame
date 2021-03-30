@@ -29,7 +29,7 @@ namespace Project2D
 		
 		public abstract AABB GetAABB();
 
-		public abstract void TransformByGlobalTransform();
+		public abstract void UpdateGlobalPoints();
 	}
 
 	class CircleCollider : Collider
@@ -49,7 +49,7 @@ namespace Project2D
 			return new AABB(midPointTransformed.y + radius + position.y, midPointTransformed.x - radius + position.x, midPointTransformed.y - radius + position.y, midPointTransformed.x + radius + position.x);
 		}
 
-		public override void TransformByGlobalTransform()
+		public override void UpdateGlobalPoints()
 		{
 			globalTransform = connected.GetGlobalTransform();
 			midPointTransformed = connected.GetGlobalTransform() * midPoint;
@@ -63,19 +63,19 @@ namespace Project2D
 
 	class RectangleCollider : Collider
 	{
-		Vector2[] localPoints = new Vector2[4];
 		Vector2[] globalPoints = new Vector2[4];
+		Vector2 centrePoint;
+		Vector2 halfWidth;
+		Vector2 halfHeight;
+		Vector2 globalHalfHeight;
+		Vector2 globalHalfWidth;
 
-		public RectangleCollider(float left, float top, float width, float height)
+		public RectangleCollider(float minX, float minY, float width, float height)
 		{
 			type = ObjectType.Polygon;
-			localPoints = new Vector2[4]
-			{
-				new Vector2(left, top),
-				new Vector2(left + width, top),
-				new Vector2(left + width, top + height),
-				new Vector2(left, top + height),
-			};
+			centrePoint = new Vector2(minX + width / 2, minY + height / 2);
+			halfWidth = new Vector2(width / 2, 0);
+			halfHeight = new Vector2(0, height / 2);
 		}
 
 		public static RectangleCollider FromTexture(Texture2D texture)
@@ -108,34 +108,45 @@ namespace Project2D
 
 		public override float GetMass()
 		{
-			//float area = 0;
-			//int j = 0;
-			//for (int i = 0; i < localPoints.Length; i++)
-			//{
-			//	++j;
-			//	j %= localPoints.Length;
-			//	//mass += 0.5f * (points[i + 1] - points[i]).Magnitude() * new Vector2(points[i].x * (0.5f - points[i+1].x), points[i].y * (0.5f - points[i + 1].y)).Magnitude();
-			//	//Equation for area of a triangle (the third point is zero zero) 
-			//	area += 0.5f * (float)Math.Abs(localPoints[i].x * localPoints[j].y - localPoints[j].x * localPoints[i].y);
-			//}
-			float area = (float)Math.Abs((localPoints[0].x - localPoints[2].x) * (localPoints[0].y - localPoints[2].y));
+			float area = (float)Math.Abs((halfWidth.x * 2) * (halfHeight.y * 2));
 			return area * connected.density;
 		}
 
-		public override void TransformByGlobalTransform()
+		public override void UpdateGlobalPoints()
 		{
 			globalTransform = connected.GetGlobalTransform();
-			globalPoints = new Vector2[localPoints.Length];
 
-			for (int i = 0; i < localPoints.Length; i++)
-			{
-				globalPoints[i] = globalTransform * localPoints[i];
-			}
+			globalHalfWidth = globalTransform * halfWidth;
+			globalHalfHeight = globalTransform * halfHeight;
+
+			//minYminX
+			globalPoints[0] = globalTransform * (centrePoint - halfWidth - halfHeight);
+			//minYmaxX
+			globalPoints[1] = globalTransform * (centrePoint + halfWidth - halfHeight);
+			//maxYmaxX 
+			globalPoints[2] = globalTransform * (centrePoint + halfWidth + halfHeight);
+			//maxYminX 
+			globalPoints[3] = globalTransform * (centrePoint - halfWidth + halfHeight);
 		}
 
 		public Vector2[] GetGlobalPoints()
 		{
 			return globalPoints;
+		}
+
+		public Vector2 GetHalfWidthVector()
+		{
+			return globalHalfWidth;
+		}
+
+		public Vector2 GetHalfHeightVector()
+		{
+			return globalHalfHeight;
+		}
+		
+		public Vector2 GetCentrePoint()
+		{
+			return (Matrix3.GetTranslation(centrePoint) * globalTransform).GetTranslation();
 		}
 	}
 
