@@ -25,12 +25,12 @@ namespace Project2D
         private float deltaTime = 0.005f;
 
         //Scenes are gameobjects that hold every other gameobject
-        List<Scene> scenes = new List<Scene>();
+        static List<Scene> scenes = new List<Scene>();
         List<GameObject> initialObjs = new List<GameObject>();
 
         public static Texture2D[] textures;
 
-        int currentScene = 0;
+        static int currentScene = 0;
 
         public static SmoothCamera camera;
 
@@ -64,12 +64,12 @@ namespace Project2D
             };
 
             RectangleCollider playerCollider = RectangleCollider.FromTextureName(TextureName.Crate);
-            crate = new PhysicsObject(TextureName.Crate, Vector2.One * 0, Vector2.One * 0.5f, playerCollider, 0f, 1, 1, 1, null);
+            crate = new PhysicsObject(TextureName.Crate, Vector2.One * 0, Vector2.One * 0.5f, playerCollider, 1f, 1, 1, 1, null);
             crate.AddVelocity(new Vector2(100,0));
             initialObjs.Add(new GameObject(TextureName.Grid));
             initialObjs.Add(crate);
             playerCollider = RectangleCollider.FromTextureName(TextureName.Crate);
-            initialObjs.Add(new PhysicsObject(TextureName.Crate, Vector2.One * 400, Vector2.One * 0.5f, playerCollider, 0f, 1, 1, 0, null));
+            initialObjs.Add(new PhysicsObject(TextureName.Crate, Vector2.One * 400, Vector2.One * 0.5f, playerCollider, 1, 1, 0, 0, null, 10, false));
             scenes.Add(new Scene(initialObjs));
 
             playerCollider = RectangleCollider.FromTextureName(TextureName.Player);
@@ -99,9 +99,8 @@ namespace Project2D
 
             //Update game objects here       
 
-            scenes[currentScene].Update(deltaTime);
-            scenes[currentScene].UpdateTransforms();
             CollisionManager.CheckCollisions();
+            scenes[currentScene].Update(deltaTime);
             scenes[currentScene].UpdateTransforms();
         }
 
@@ -121,11 +120,9 @@ namespace Project2D
 
             //draw all objects
 			scenes[currentScene].Draw();
-            if (CollisionManager.obj != null)
-            {
-                Vector2 pos = CollisionManager.obj.GlobalPosition;
-                DrawLineEx(pos, pos + CollisionManager.drawVector * 10,10, RLColor.RED);
-            }
+
+            DrawCircle((int)CollisionManager.drawVector.x, (int)CollisionManager.drawVector.y, 5, RLColor.RED);
+            
             //end 2d camera
             camera.EndCamera();
 
@@ -140,6 +137,11 @@ namespace Project2D
         public static Texture2D GetTextureFromName(TextureName name)
         {
             return textures[(int)name];
+        }
+
+        public static Scene getCurrentScene()
+		{
+            return scenes[currentScene];
         }
 
     }

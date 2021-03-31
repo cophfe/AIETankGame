@@ -24,14 +24,14 @@ namespace Project2D
 		public float restitution;
 		public float density;
 		public float drag = 0f;
-		public float mass;
-		public float iMass;
-		protected float inetia;
-		protected float iInetia;
+		protected float mass = 1;
+		protected float iMass = 1;
+		protected float inertia;
+		protected float iInertia;
 
 		public float gravity = 0;
 
-		public PhysicsObject(TextureName image, Vector2 position, Vector2 scale, Collider collider = null, float drag = 0, float angularDrag = 0, float restitution = 0,  float rotation = 0, GameObject parent = null, float density = 1, float mass = float.NaN) : base(image, position, scale, rotation, parent)
+		public PhysicsObject(TextureName image, Vector2 position, Vector2 scale, Collider collider = null, float drag = 0, float angularDrag = 0, float restitution = 0,  float rotation = 0, GameObject parent = null, float density = 1, bool isDynamic = true) : base(image, position, scale, rotation, parent)
 		{
 			hasPhysics = true;
 			this.collider = collider;
@@ -39,23 +39,21 @@ namespace Project2D
 			this.drag = drag;
 			this.angularDrag = angularDrag;
 			this.density = density;
-			this.mass = mass;
 
-			if (collider == null)
-			{
-				if (float.IsNaN(mass))
-				{
-					this.mass = collider.GetMass();
-				}
-			}
-			else
+			
+			if (collider != null)
 			{
 				collider.SetConnectedPhysicsObject(this);
-				if (float.IsNaN(mass))
-					this.mass = 1;
+				collider.GetMass(out mass, out inertia);
 				CollisionManager.AddObject(this);
 			}
-			iMass = 1/this.mass;
+			if (!isDynamic)
+			{
+				mass = 0;
+				iMass = 0;
+			}
+			else
+				iMass = 1/mass;
 
 		}
 
@@ -63,7 +61,6 @@ namespace Project2D
 		{
 			collider = null;
 			drag = 0;
-			
 		}
 
 
@@ -77,7 +74,7 @@ namespace Project2D
 			this.collider = collider;
 			if (recalculateMass)
 			{
-				mass = collider.GetMass();
+				collider.GetMass(out mass, out inertia);
 				iMass = 1 / mass;
 			}
 			CollisionManager.AddObject(this);
@@ -104,6 +101,26 @@ namespace Project2D
 		{
 			force += a;
 		}
+		public float GetMass()
+		{
+			return mass;
+		}
+		public float GetInverseMass()
+		{
+			return iMass;
+		}
+		public float GetInverseInertia()
+		{
+			return iInertia;
+		}
+		public float GetInertia()
+		{
+			return inertia;
+		}
+		public void AddTorque(float a)
+		{
+			torque += a;
+		}
 		public Vector2 GetVelocity()
 		{
 			return velocity;
@@ -113,19 +130,33 @@ namespace Project2D
 			velocity += v;
 		}
 
+		//https://www.codeproject.com/Articles/1215961/Making-a-D-Physics-Engine-Mass-Inertia-and-Forces
+		//god damn there are no resources for calculation of inertia in this very specific situation
+		public void addImpulseAtPosition(Vector2 impulse, Vector2 position)
+		{
+			velocity += impulse * iMass;
+			angularVelocity += position.zCross(impulse) * iInertia;
+		}
+
+
+
 		public override void Update(float deltaTime)
 		{
 			if (hasPhysics)
 			{
 				velocity += force * (deltaTime * iMass);
-				AddVelocity((force - velocity * drag)* deltaTime * iMass);
-				//AddVelocity(velocity * Math.Min(1,-drag * deltaTime) * iMass);
-				position += (velocity * deltaTime);
+				velocity -= velocity * Math.Min(1, drag * deltaTime);
 
-				//angularVelocity += (float)(torque * iInertia * deltaTime);
+				position += velocity * deltaTime;
+				
+				angularVelocity += torque * iInertia * deltaTime;
 				angularVelocity -= angularVelocity * angularDrag * deltaTime;
 
-				rotation += (angularVelocity) * deltaTime;
+				rotation += angularVelocity * deltaTime;
+
+				//angularVelocity += (float)(torque * iInertia * deltaTime);
+				
+
 				force = Vector2.Zero;
 			}
 			base.Update(deltaTime);

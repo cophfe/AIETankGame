@@ -19,7 +19,7 @@ namespace Project2D
 		const float velocityFasterAddition = 100f;
 		const float accelerationFasterAddition = 500f;
 
-		public Player(TextureName fileName, TextureName armName, Vector2 armOffset, Vector2 armScale, Vector2 position, Vector2 scale, float rotation, Scene scene, RectangleCollider collider) : base(fileName, position, scale, collider, 1f, 3f, 1f, 0f, scene, 1)
+		public Player(TextureName fileName, TextureName armName, Vector2 armOffset, Vector2 armScale, Vector2 position, Vector2 scale, float rotation, Scene scene, RectangleCollider collider) : base(fileName, position, scale, collider, 0.5f, 3f, 0.3f, 0f, scene, 1)
 		{
 			new Arm(armName, armOffset, armScale, 0, this);
 		}

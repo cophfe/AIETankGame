@@ -25,7 +25,7 @@ namespace Project2D
 			connected = newConnected;
 		}
 
-		public abstract float GetMass();
+		public abstract void GetMass(out float mass, out float inertia);
 		
 		public abstract AABB GetAABB();
 
@@ -55,9 +55,10 @@ namespace Project2D
 			midPointTransformed = connected.GetGlobalTransform() * midPoint;
 		}
 
-		public override float GetMass()
+		public override void GetMass(out float mass, out float inertia)
 		{
-			return connected.density * Trig.pi * radius * radius;
+			throw new NotImplementedException();
+			//return connected.density * Trig.pi * radius * radius;
 		}
 	}
 
@@ -106,10 +107,27 @@ namespace Project2D
 			return new AABB(maxY + position.y, minX + position.x, minY + position.y, maxX + position.x);
 		}
 
-		public override float GetMass()
+		public override void GetMass(out float mass, out float inertia)
 		{
 			float area = (float)Math.Abs((halfWidth.x * 2) * (halfHeight.y * 2));
-			return area * connected.density;
+			mass =  area * connected.density;
+			float inert;
+
+			//OKAY I KNOW THIS IS TERRIBLE BUT THE ONLY WAY I FOUND TO GET INERTIA FOR A 2D OBJECT WAS FOR TRIANGLES
+			//(because inertia is not usually computed like this and this is probably technically wrong)
+			//bottom left
+			Vector2 a = centrePoint - halfWidth - halfHeight;
+			//bottom right
+			Vector2 b = centrePoint + halfWidth - halfHeight;
+			float triMass = connected.density * 0.5f * Math.Abs(a.zCross(b));
+			inert = triMass * (a.MagnitudeSquared() + b.MagnitudeSquared() + a.Dot(b)) / 6;
+			//bottom left
+			a = centrePoint - halfWidth - halfHeight;
+			//top left
+			b = centrePoint - halfWidth + halfHeight;
+			triMass = connected.density * 0.5f * Math.Abs(a.zCross(b));
+			inert += triMass * (a.MagnitudeSquared() + b.MagnitudeSquared() + a.Dot(b)) / 6;
+			inertia = 2 * inert;
 		}
 
 		public override void UpdateGlobalPoints()
