@@ -12,9 +12,6 @@ namespace Project2D
 	class GameObject
 	{
 		#region Variables
-
-		
-		
 		//scene tree stuff
 		protected GameObject parent = null;
 		protected List<GameObject> children = new List<GameObject>();
@@ -25,22 +22,13 @@ namespace Project2D
 
 		//drawing
 		protected bool isDrawn = false;
-		private Texture2D texture;
-		private Colour colour;
-		Rectangle spriteRectangle = new Rectangle();
-		Rectangle textureRectangle = new Rectangle();
-		RLVector2 origin = new RLVector2();
+		protected Sprite spriteManager;
 
 		//local information
 		protected Vector2 position;
 		protected Vector2 scale;
 		protected float rotation;
-
-		//read only variables for drawing
-		private Vector2 globalPosition;
-		private float globalRotation;
-		private Vector2 globalScale;
-
+		protected float sortingOffset;
 		//physics
 		protected bool hasPhysics = false;
 
@@ -55,58 +43,50 @@ namespace Project2D
 			hasPhysics = false;
 			
 
-			Init(TextureName.None, Vector2.Zero, Vector2.One, 0, null, new Colour(0xFF, 0xFF, 0xFF, 0xFF), false);
+			Init(TextureName.None, Vector2.Zero, 1, 0, null, false);
 		}
 
-		public GameObject(TextureName image, Vector2 position, Vector2 scale, float rotation = 0, GameObject parent = null, bool isDrawn = true)
+		public GameObject(TextureName image, Vector2 position, float scale, float rotation = 0, GameObject parent = null, bool isDrawn = true)
 		{
-			Init(image, position, scale, rotation, parent, new Colour(0xFF, 0xFF, 0xFF, 0xFF), isDrawn);
+			Init(image, position, scale, rotation, parent, isDrawn);
 		}
 
 		public GameObject(TextureName image)
 		{
-			Init(image, Vector2.Zero, Vector2.One, 0, null, new Colour(0xFF, 0xFF, 0xFF, 0xFF), true);
+			Init(image, Vector2.Zero, 1, 0, null, true);
 		}
 
-		protected void Init(TextureName image, Vector2 position, Vector2 scale, float rotation, GameObject parent, Colour colour, bool isDrawn = true)
+		protected void Init(TextureName image, Vector2 position, float scale, float rotation, GameObject parent, bool isDrawn = true)
 		{
 
 			this.isDrawn = isDrawn;
 
 			id = idCounter;
 			idCounter++;
-			
-			texture = Game.GetTextureFromName(image);
-			textureRectangle.width = texture.width;
-			textureRectangle.height = texture.height;
-			spriteRectangle.width = texture.width * scale.x;
-			spriteRectangle.height = texture.height * scale.y;
-			origin.x = spriteRectangle.width / 2;
-			origin.y = spriteRectangle.height / 2;
+			spriteManager = new Sprite(Game.GetTextureFromName(image), this);
 			
 			if (parent != null)
 				parent.addChild(this);
 
 			//position and scale will be zero if no values are given
-			localTransform = Matrix3.GetTranslation(position) * Matrix3.GetRotateZ(rotation) * Matrix3.GetScale(scale);
+			localTransform = Matrix3.GetTranslation(position) * Matrix3.GetRotateZ(rotation) * Matrix3.GetScale(Vector2.One * scale);
 			this.position = position;
 			this.rotation = rotation;
-			this.scale = scale;
-			
-			this.colour = colour;
+			this.scale = Vector2.One * scale;
+			sortingOffset = spriteManager.CurrentTexture().height / 2;
 			UpdateTransforms();
-
 		}
+
 		#endregion
 
 		#region Scene Tree Methods
-		protected void addChild(GameObject child)
+		public void addChild(GameObject child)
 		{
 			children.Add(child);
 			child.SetParent(this);
 		}
 
-		public void SetParent(GameObject parent)
+		protected void SetParent(GameObject parent)
 		{
 			if (parent != null)
 			{
@@ -127,7 +107,6 @@ namespace Project2D
 				child.Delete();
 			}
 			parent.RemoveChild(this);
-			UnloadTexture(texture);
 		}
 		#endregion
 
@@ -143,6 +122,10 @@ namespace Project2D
 		public virtual void LateUpdate(float deltaTime)
 		{
 
+			foreach (var child in children)
+			{
+				child.Update(deltaTime);
+			}
 		}
 
 		protected float id;
@@ -155,34 +138,53 @@ namespace Project2D
 			}
 		}
 
-		
-
 		public virtual void Draw()
 		{
-
 			if (isDrawn)
 			{
-				globalTransform.GetAllTransformations(ref globalPosition, ref globalScale, ref globalRotation);
-				
-				spriteRectangle.width = texture.width * globalScale.x;
-				spriteRectangle.height = texture.height * globalScale.y;
-				origin.x = spriteRectangle.width / 2;
-				origin.y = spriteRectangle.height / 2;
-
-				spriteRectangle.x = globalPosition.x;
-				spriteRectangle.y = globalPosition.y;
-
-				DrawTexturePro(texture, textureRectangle, spriteRectangle, origin, globalRotation * Trig.rad2Deg, colour);
+				spriteManager.Draw();
 			}
 
-
-			foreach (var child in children)
+			//using insertion sort because it is fast for when an array is almost sorted
+			//also it is stable which is important
+			GameObject cache;
+			int j;
+			int n = children.Count;
+			for (int i = 1; i < n; i++)
 			{
-				child.Draw();
+				cache = children[i];
+				j = i - 1;
+
+				while (j >= 0 && children[j].GetSprite().GetSort() > cache.GetSprite().GetSort())
+				{
+					children[j + 1] = children[j];
+					j = j - 1;
+				}
+				children[j + 1] = cache;
+			}
+
+			for (j = 0; j < n; j++)
+			{
+				children[j].Draw();
 			}
 		}
 
+		public Sprite GetSprite()
+		{
+			return spriteManager;
+		}
 
+		public float GetSortingOffset()
+		{
+			return sortingOffset;
+		}
+
+		public virtual void SetTint(Colour c)
+		{
+			spriteManager.SetTint(c);
+		}
+
+		#region Transformations
 		public virtual void UpdateTransforms()
 		{
 			localTransform = Matrix3.GetTranslation(position) * Matrix3.GetRotateZ(rotation) * Matrix3.GetScale(scale);
@@ -195,7 +197,7 @@ namespace Project2D
 			{
 				globalTransform = parent.GetGlobalTransform() * localTransform;
 			}
-			foreach(var child in children)
+			foreach (var child in children)
 			{
 				child.UpdateTransforms();
 			}
@@ -255,7 +257,7 @@ namespace Project2D
 					rotation = value;
 					return;
 				}
-				rotation = -(localTransform * globalTransform.Inverse() * Matrix3.GetRotateZ(value)).GetZRotation();
+				rotation = (localTransform * globalTransform.Inverse() * Matrix3.GetRotateZ(value)).GetZRotation();
 				//It is worrying that this requires a negative to be correct
 				rotation %= Trig.pi * 2;
 			}
@@ -297,8 +299,7 @@ namespace Project2D
 				scale = (localTransform * globalTransform.Inverse() * Matrix3.GetScale(value)).GetScale();
 			}
 		}
-
-
+		#endregion
 
 	}
 }

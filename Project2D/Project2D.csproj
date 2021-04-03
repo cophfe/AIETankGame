@@ -49,19 +49,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Arm.cs" />
-    <Compile Include="SmoothCamera.cs" />
-    <Compile Include="CollisionManager.cs" />
+    <Compile Include="PlayerScripts\Arm.cs" />
+    <Compile Include="ObjectScripts\SmoothCamera.cs" />
+    <Compile Include="CollisionScripts\CollisionManager.cs" />
     <Compile Include="Game.cs" />
-    <Compile Include="GameObject.cs" />
+    <Compile Include="ObjectScripts\GameObject.cs" />
     <Compile Include="MlibToRaylib.cs" />
-    <Compile Include="PhysicsObject.cs" />
-    <Compile Include="Player.cs" />
+    <Compile Include="ObjectScripts\PhysicsObject.cs" />
+    <Compile Include="PlayerScripts\Eye.cs" />
+    <Compile Include="PlayerScripts\Character.cs" />
+    <Compile Include="PlayerScripts\LineOfSight.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Renderer.cs" />
-    <Compile Include="Collider.cs" />
+    <Compile Include="CollisionScripts\Collider.cs" />
     <Compile Include="Scene.cs" />
+    <Compile Include="Sprite.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

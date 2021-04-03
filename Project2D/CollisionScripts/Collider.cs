@@ -9,91 +9,48 @@ using Mlib;
 
 namespace Project2D
 {
-	abstract class Collider
+	class Collider
 	{
 		protected PhysicsObject connected;
-		protected ObjectType type;
 		protected Matrix3 globalTransform;
-
-		public ObjectType GetType()
-		{
-			return type;
-		}
-
-		public void SetConnectedPhysicsObject(PhysicsObject newConnected)
-		{
-			connected = newConnected;
-		}
-
-		public abstract void GetMass(out float mass, out float inertia);
-		
-		public abstract AABB GetAABB();
-
-		public abstract void UpdateGlobalPoints();
-	}
-
-	class CircleCollider : Collider
-	{
-		float radius;
-		Vector2 midPoint;
-		Vector2 midPointTransformed;
-
-		public CircleCollider(Vector2 midPoint, float radius)
-		{
-			type = ObjectType.Circle;
-		}
-
-		public override AABB GetAABB()
-		{
-			Vector2 position = globalTransform.GetTranslation();
-			return new AABB(midPointTransformed.y + radius + position.y, midPointTransformed.x - radius + position.x, midPointTransformed.y - radius + position.y, midPointTransformed.x + radius + position.x);
-		}
-
-		public override void UpdateGlobalPoints()
-		{
-			globalTransform = connected.GetGlobalTransform();
-			midPointTransformed = connected.GetGlobalTransform() * midPoint;
-		}
-
-		public override void GetMass(out float mass, out float inertia)
-		{
-			throw new NotImplementedException();
-			//return connected.density * Trig.pi * radius * radius;
-		}
-	}
-
-	class RectangleCollider : Collider
-	{
+		CollisionLayer layer;
 		Vector2[] globalPoints = new Vector2[4];
 		Vector2 centrePoint;
 		Vector2 halfWidth;
 		Vector2 halfHeight;
 		Vector2 globalHalfHeight;
 		Vector2 globalHalfWidth;
+		protected AABB aABB;
 
-		public RectangleCollider(float minX, float minY, float width, float height)
+		public void SetConnectedPhysicsObject(PhysicsObject newConnected)
 		{
-			type = ObjectType.Polygon;
+			connected = newConnected;
+		}
+		public PhysicsObject GetConnectedPhysicsObject()
+		{
+			return connected;
+		}
+		public Collider(float minX, float minY, float width, float height, CollisionLayer layer = CollisionLayer.Default)
+		{
 			centrePoint = new Vector2(minX + width / 2, minY + height / 2);
 			halfWidth = new Vector2(width / 2, 0);
 			halfHeight = new Vector2(0, height / 2);
+			this.layer = layer;
 		}
 
-		public static RectangleCollider FromTexture(Texture2D texture)
+		public static Collider FromTexture(Texture2D texture, CollisionLayer layer = CollisionLayer.Default)
 		{
-			return new RectangleCollider(-texture.width / 2, -texture.height / 2, -texture.width, -texture.height);
+			return new Collider(-texture.width / 2, -texture.height / 2, -texture.width, -texture.height, layer);
 		}
 
-		public static RectangleCollider FromTextureName(TextureName textureName)
+		public static Collider FromTextureName(TextureName textureName, CollisionLayer layer = CollisionLayer.Default)
 		{
 			Texture2D texture = Game.GetTextureFromName(textureName);
-			return new RectangleCollider(-texture.width / 2, -texture.height / 2, texture.width, texture.height);
+			return new Collider(-texture.width / 2, -texture.height / 2, texture.width, texture.height, layer);
 		}
 
-		public override AABB GetAABB()
+		public void UpdateAABB()
 		{
-			Vector2 position = globalTransform.GetTranslation();
-
 			float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
 			float minY = float.PositiveInfinity, maxY = float.NegativeInfinity;
 			for (int i = 0; i < globalPoints.Length; i++)
@@ -104,10 +61,25 @@ namespace Project2D
 				maxY = globalPoints[i].y > maxY ? globalPoints[i].y : maxY; 
 				minY = globalPoints[i].y < minY ? globalPoints[i].y : minY; 
 			}
-			return new AABB(maxY + position.y, minX + position.x, minY + position.y, maxX + position.x);
+			aABB = new AABB(minY, minX, maxY, maxX);
 		}
 
-		public override void GetMass(out float mass, out float inertia)
+		public AABB GetAABB()
+		{
+			return aABB;
+		}
+
+		public CollisionLayer GetLayer()
+		{
+			return layer;
+		}
+
+		public void SetCollisionLayer(CollisionLayer layer)
+		{
+			this.layer = layer;
+		}
+
+		public void GetMass(out float mass, out float inertia)
 		{
 			float area = (float)Math.Abs((halfWidth.x * 2) * (halfHeight.y * 2));
 			mass =  area * connected.density;
@@ -130,21 +102,22 @@ namespace Project2D
 			inertia = 2 * inert;
 		}
 
-		public override void UpdateGlobalPoints()
+		public void UpdateGlobalPoints()
 		{
 			globalTransform = connected.GetGlobalTransform();
 
 			globalHalfWidth = globalTransform * halfWidth;
 			globalHalfHeight = globalTransform * halfHeight;
+			Vector2 position = globalTransform.GetTranslation();
 
 			//minYminX
-			globalPoints[0] = globalTransform * (centrePoint - halfWidth - halfHeight);
+			globalPoints[0] = globalTransform * (centrePoint - halfWidth - halfHeight) + position;
 			//minYmaxX
-			globalPoints[1] = globalTransform * (centrePoint + halfWidth - halfHeight);
+			globalPoints[1] = globalTransform * (centrePoint + halfWidth - halfHeight) + position;
 			//maxYmaxX 
-			globalPoints[2] = globalTransform * (centrePoint + halfWidth + halfHeight);
+			globalPoints[2] = globalTransform * (centrePoint + halfWidth + halfHeight) + position;
 			//maxYminX 
-			globalPoints[3] = globalTransform * (centrePoint - halfWidth + halfHeight);
+			globalPoints[3] = globalTransform * (centrePoint - halfWidth + halfHeight) + position;
 		}
 
 		public Vector2[] GetGlobalPoints()
@@ -161,6 +134,11 @@ namespace Project2D
 		{
 			return globalHalfHeight;
 		}
+
+		public Vector2 GetLocalHalfWidthHeightVector()
+		{
+			return new Vector2(halfWidth.x, halfHeight.y);
+		}
 		
 		public Vector2 GetCentrePoint()
 		{
@@ -170,25 +148,22 @@ namespace Project2D
 
 	struct AABB
 	{
-		public Vector2 topLeft;
-		public Vector2 bottomRight;
-		public Vector2 halfWidth;
-		public Vector2 halfHeight;
+		public float halfWidth;
+		public float halfHeight;
+		public Vector2 centre;
 
 		public AABB(float top, float left, float bottom, float right)
 		{
-			topLeft = new Vector2(left, top);
-			bottomRight = new Vector2(right, bottom);
-			halfWidth = new Vector2((right - left) / 2, 0);
-			halfHeight = new Vector2(0, (bottom - top) / 2);
+			halfWidth = (right - left) / 2;
+			halfHeight = (bottom - top) / 2;
+			centre = new Vector2(left + halfWidth, top + halfHeight);
 		}
 
 		public AABB(Vector2 topLeft, Vector2 bottomRight)
 		{
-			this.topLeft = topLeft;
-			this.bottomRight = bottomRight;
-			halfWidth = new Vector2((bottomRight.x - topLeft.x) / 2, 0);
-			halfHeight = new Vector2(0, (bottomRight.y - topLeft.y) / 2);
+			halfWidth = (bottomRight.x - topLeft.x) / 2;
+			halfHeight = (bottomRight.y - topLeft.y) / 2;
+			centre = new Vector2(topLeft.x + halfWidth, topLeft.y + halfHeight);
 		}
 
 		public static AABB GetAABBFromPoints(Vector2[] points)
@@ -203,14 +178,40 @@ namespace Project2D
 				maxY = points[i].y > maxY ? points[i].y : maxY;
 				minY = points[i].y < minY ? points[i].y : minY;
 			}
-			return new AABB(maxY, minX, minY, maxX);
+			return new AABB(minY, minX, maxY, maxX);
 		}
-
 	}
 
-	enum ObjectType
+	struct Ray
 	{
-		Circle,
-		Polygon
+		public Vector2 position;
+		public Vector2 direction;
+
+		public Ray(Vector2 position, Vector2 direction)
+		{
+			this.position = position;
+			this.direction = direction;
+		}
+	}
+
+	struct Hit
+	{
+		public float distanceAlongRay;
+		public PhysicsObject objectHit;
+
+		public Hit(float distanceAlongRay, PhysicsObject colliderHit)
+		{
+			this.distanceAlongRay = distanceAlongRay;
+			this.objectHit = colliderHit;
+		}
+	}
+
+	enum CollisionLayer
+	{
+		Default,
+		ScreenBounds,
+		Player,
+		Objects,
+		Count
 	}
 }

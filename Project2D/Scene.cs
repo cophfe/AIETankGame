@@ -9,7 +9,6 @@ namespace Project2D
 {
 	class Scene : GameObject
 	{
-		
 		public Scene(List<GameObject> gameObjects)
 		{
 			globalTransform = Matrix3.Identity;
@@ -46,16 +45,47 @@ namespace Project2D
 
 		public override void Draw()
 		{
-			foreach (var child in children)
+			//Top level gameobjects are sorted based on their y position + sorting point offset (the higher y pos the higher sorting priority)
+			//children are sorted based on their z value
+			GameObject cache;
+			int j;
+			int n = children.Count;
+			for (int i = 1; i < n; i++)
 			{
-				child.Draw();
+				cache = children[i];
+				j = i - 1;
+
+				while (j >= 0 && -children[j].GetSortingOffset() - children[j].LocalPosition.y > -cache.GetSortingOffset() - children[j].LocalPosition.y)
+				{
+					children[j + 1] = children[j];
+					j = j - 1;
+				}
+				children[j + 1] = cache;
 			}
+
+			for (int i = 0; i < (int)Layers.Count; i++)
+			{
+				foreach (var child in children)
+				{
+					if (child.GetSprite().GetLayer() == i)
+						child.Draw();
+				}
+			}
+			
 		}
 
-		
-		
+		public List<GameObject> GetAllSceneChildren()
+		{
+			return children;
+		} 
+	}
 
-
+	enum Layers
+	{
+		Background,
+		Midground,
+		Foreground,
+		Count
 	}
 
 }

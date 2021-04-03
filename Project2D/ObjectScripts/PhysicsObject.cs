@@ -12,7 +12,7 @@ namespace Project2D
 {
 	class PhysicsObject : GameObject
 	{
-		Collider collider = null;
+		protected Collider collider = null;
 
 		//protected Vector2 position;
 		protected Vector2 velocity;
@@ -31,7 +31,7 @@ namespace Project2D
 
 		public float gravity = 0;
 
-		public PhysicsObject(TextureName image, Vector2 position, Vector2 scale, Collider collider = null, float drag = 0, float angularDrag = 0, float restitution = 0,  float rotation = 0, GameObject parent = null, float density = 1, bool isDynamic = true) : base(image, position, scale, rotation, parent)
+		public PhysicsObject(TextureName image, Vector2 position, float scale, Collider collider = null, float drag = 0, float angularDrag = 0, float restitution = 0,  float rotation = 0, GameObject parent = null, float density = 1, bool isDynamic = true, bool isRotatable = true, bool isDrawn = true) : base(image, position, scale, rotation, parent, isDrawn)
 		{
 			hasPhysics = true;
 			this.collider = collider;
@@ -47,14 +47,23 @@ namespace Project2D
 				collider.GetMass(out mass, out inertia);
 				CollisionManager.AddObject(this);
 			}
-			if (!isDynamic)
+			
+			if (isDynamic)
 			{
+				iMass = 1 / mass;
+				iInertia = 1 / inertia;
+			}
+			else
+			{
+				isRotatable = false;
 				mass = 0;
 				iMass = 0;
 			}
-			else
-				iMass = 1/mass;
-
+			if (!isRotatable)
+			{
+				inertia = 0;
+				iInertia = 0;
+			}
 		}
 
 		public PhysicsObject(TextureName image) : base(image)
@@ -76,6 +85,7 @@ namespace Project2D
 			{
 				collider.GetMass(out mass, out inertia);
 				iMass = 1 / mass;
+				iInertia = 1 / inertia;
 			}
 			CollisionManager.AddObject(this);
 		}
@@ -129,16 +139,22 @@ namespace Project2D
 		{
 			velocity += v;
 		}
+		public float GetAngularVelocity()
+		{
+			return angularVelocity;
+		}
+		public void AddAngularVelocity(float v)
+		{
+			angularVelocity += v;
+		}
 
 		//https://www.codeproject.com/Articles/1215961/Making-a-D-Physics-Engine-Mass-Inertia-and-Forces
 		//god damn there are no resources for calculation of inertia in this very specific situation
-		public void addImpulseAtPosition(Vector2 impulse, Vector2 position)
+		public void AddImpulseAtPosition(Vector2 impulse, Vector2 position)
 		{
-			velocity += impulse * iMass;
-			angularVelocity += position.zCross(impulse) * iInertia;
+			velocity += iMass * impulse;
+			angularVelocity += -iInertia * position.zCross(impulse);
 		}
-
-
 
 		public override void Update(float deltaTime)
 		{
