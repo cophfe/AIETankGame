@@ -40,11 +40,11 @@ namespace Project2D
 			main.InitiateMiddlePoint(offset);
 		}
 
-		public override void Update(float deltaTime)
+		public override void Update()
 		{
 			if (isMain)
 			{
-				Vector2 mousePos = Game.camera.GetMouseWorldPosition();
+				Vector2 mousePos = Game.GetCurrentScene().GetCamera().GetMouseWorldPosition();
 				targetPosition = mousePos - (middlePoint * flipMultiplier + parent.GlobalPosition);
 				targetPosition = targetPosition.MagnitudeSquared() > maxDistance * maxDistance ? targetPosition.Normalised() * maxDistance : targetPosition;
 			}
@@ -56,7 +56,7 @@ namespace Project2D
 			}
 			position = centeredPosition * flipMultiplier + targetPosition;
 			position.y += yOffset;
-			base.Update(deltaTime);
+			base.Update();
 
 		}
 
@@ -89,10 +89,18 @@ namespace Project2D
 			{
 				Ray ray = new Ray(GlobalPosition, targetPosition.Normalised());
 				Hit hit;
-				if (CollisionManager.RayCast(ray, out hit, CollisionLayer.Player))
+				if (Game.GetCurrentScene().GetCollisionManager().RayCast(ray, out hit, CollisionLayer.Player))
 				{
 					DrawLineEx(ray.position, ray.direction * hit.distanceAlongRay + ray.position, 10, RLColor.RED);
-					hit.objectHit.AddImpulseAtPosition(ray.direction * 2000, ray.direction * hit.distanceAlongRay + ray.position);
+					if (hit.objectHit.GetCollider().GetLayer() == CollisionLayer.Enemy)
+					{
+						(hit.objectHit as Chicken).cookedValue += Game.deltaTime * 2;
+					}
+					else
+					{
+						hit.objectHit.AddImpulseAtPosition(ray.direction * 2000, (ray.direction * hit.distanceAlongRay + ray.position) - hit.objectHit.GetCollider().GetCentrePoint());
+
+					}
 				}
 				else
 					DrawLineEx(GlobalPosition, (GlobalPosition + ray.direction * 1000), 10, RLColor.RED);

@@ -24,20 +24,27 @@ namespace Project2D
 		Vector2 shake = Vector2.Zero;
 		float shakeAmount;
 
-		PhysicsObject[] bounds;
-		const float boundsThickness = 40;
-
-		public SmoothCamera(GameObject parent, Vector2 position, float rotation, float zoom, Vector2 offset, bool lineOfSight = true, params CollisionLayer[] ignoredLineOfSight) : base (TextureName.None , position, 1, rotation, parent, false)
+		public SmoothCamera(Scene parent, Vector2 position, float rotation, float zoom, Vector2 offset, bool lineOfSight = true, params CollisionLayer[] ignoredLineOfSight) : base (TextureName.None , position, 1, rotation, parent, false)
 		{
 			this.offset = new Vector2(Game.screenWidth / 2 + offset.x, GetScreenHeight() / 2 + offset.y);
 			camera = new Camera2D { target = position, offset = position + new Vector2(GetScreenWidth() / 2 + offset.x, GetScreenHeight() / 2 + offset.y), zoom = zoom, rotation = rotation };
 			this.lineOfSight = lineOfSight;
 			LineOfSight.SetIgnored(ignoredLineOfSight);
-
-			LineOfSight.SetMaxDist(new Vector2(Game.screenWidth/2, Game.screenHeight/ 2).Magnitude() + smoothMultiplier * 10);
+			GameObject vignette = new GameObject(TextureName.Vignette);
+			AddChild(vignette);
+			vignette.LocalScale = new Vector2(Game.screenWidth, Game.screenHeight) / 1000;
+			sortingOffset = 1000;
+			LineOfSight.SetMaxDist(new Vector2(Game.screenWidth/2, Game.screenHeight/ 2).Magnitude() + smoothMultiplier * 15);
+			parent.SetCamera(this);
+			LineOfSight.Initiate(parent);
 		}
 
-		public override void LateUpdate(float deltaTime)
+		public SmoothCamera()
+		{
+			on = false;
+		}
+
+		public override void Update()
 		{
 			if (targetObject != null)
 			{
@@ -47,7 +54,7 @@ namespace Project2D
 			globalPosition = GlobalPosition;
 			if (globalPosition != target)
 			{
-				GlobalPosition = globalPosition + (target - globalPosition) * deltaTime * smoothMultiplier;
+				GlobalPosition = globalPosition + (target - globalPosition) * Game.deltaTime * smoothMultiplier;
 			}
 
 			shake = new Vector2((float)(rand.NextDouble() * 2 - 1) * shakeAmount, (float)(rand.NextDouble() * 2 - 1) * shakeAmount);
@@ -59,7 +66,7 @@ namespace Project2D
 			if (lineOfSight)
 			{
 				//(target should be inside objects collisionBox)
-				target.y += 20;
+				target.y += 59;
 				LineOfSight.SetOrigin(target);
 				LineOfSight.Update();
 			}
@@ -93,7 +100,9 @@ namespace Project2D
 
 		public Vector2 GetMouseWorldPosition()
 		{
-			return (globalTransform * Matrix3.GetTranslation(GetMousePosition())).GetTranslation() - GetOffset();
+			if (on)
+				return (globalTransform * Matrix3.GetTranslation(GetMousePosition())).GetTranslation() - GetOffset();
+			return GetMousePosition();
 		}
 
 		public void SetShakeAmount(float shake)

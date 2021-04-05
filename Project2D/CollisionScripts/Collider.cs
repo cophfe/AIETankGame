@@ -12,14 +12,17 @@ namespace Project2D
 	class Collider
 	{
 		protected PhysicsObject connected;
+
 		protected Matrix3 globalTransform;
-		CollisionLayer layer;
 		Vector2[] globalPoints = new Vector2[4];
-		Vector2 centrePoint;
-		Vector2 halfWidth;
-		Vector2 halfHeight;
 		Vector2 globalHalfHeight;
 		Vector2 globalHalfWidth;
+		Vector2 centrePoint;
+		
+		CollisionLayer layer;
+		
+		float halfWidth;
+		float halfHeight;
 		protected AABB aABB;
 
 		public void SetConnectedPhysicsObject(PhysicsObject newConnected)
@@ -33,8 +36,16 @@ namespace Project2D
 		public Collider(float minX, float minY, float width, float height, CollisionLayer layer = CollisionLayer.Default)
 		{
 			centrePoint = new Vector2(minX + width / 2, minY + height / 2);
-			halfWidth = new Vector2(width / 2, 0);
-			halfHeight = new Vector2(0, height / 2);
+			halfWidth = width/2;
+			halfHeight = height/2;
+			this.layer = layer;
+		}
+
+		public Collider(Vector2 centrePoint, float width, float height, CollisionLayer layer = CollisionLayer.Default)
+		{
+			this.centrePoint = centrePoint;
+			halfWidth = width / 2;
+			halfHeight = height / 2;
 			this.layer = layer;
 		}
 
@@ -81,22 +92,18 @@ namespace Project2D
 
 		public void GetMass(out float mass, out float inertia)
 		{
-			float area = (float)Math.Abs((halfWidth.x * 2) * (halfHeight.y * 2));
+			float area = (float)Math.Abs((halfWidth * 2) * (halfHeight * 2));
 			mass =  area * connected.density;
 			float inert;
 
 			//OKAY I KNOW THIS IS TERRIBLE BUT THE ONLY WAY I FOUND TO GET INERTIA FOR A 2D OBJECT WAS FOR TRIANGLES
 			//(because inertia is not usually computed like this and this is probably technically wrong)
-			//bottom left
-			Vector2 a = centrePoint - halfWidth - halfHeight;
-			//bottom right
-			Vector2 b = centrePoint + halfWidth - halfHeight;
+			Vector2 a = centrePoint + new Vector2( -halfWidth, halfHeight);
+			Vector2 b = centrePoint + new Vector2( halfWidth, - halfHeight);
 			float triMass = connected.density * 0.5f * Math.Abs(a.zCross(b));
 			inert = triMass * (a.MagnitudeSquared() + b.MagnitudeSquared() + a.Dot(b)) / 6;
-			//bottom left
-			a = centrePoint - halfWidth - halfHeight;
-			//top left
-			b = centrePoint - halfWidth + halfHeight;
+			a = centrePoint + new Vector2(-halfWidth, -halfHeight);
+			b = centrePoint + new Vector2(-halfWidth, halfHeight);
 			triMass = connected.density * 0.5f * Math.Abs(a.zCross(b));
 			inert += triMass * (a.MagnitudeSquared() + b.MagnitudeSquared() + a.Dot(b)) / 6;
 			inertia = 2 * inert;
@@ -106,18 +113,18 @@ namespace Project2D
 		{
 			globalTransform = connected.GetGlobalTransform();
 
-			globalHalfWidth = globalTransform * halfWidth;
-			globalHalfHeight = globalTransform * halfHeight;
+			globalHalfWidth = globalTransform * new Vector2(halfWidth, 0);
+			globalHalfHeight = globalTransform * new Vector2(0, halfHeight);
 			Vector2 position = globalTransform.GetTranslation();
-
+			
 			//minYminX
-			globalPoints[0] = globalTransform * (centrePoint - halfWidth - halfHeight) + position;
+			globalPoints[0] = globalTransform * (centrePoint + new Vector2(-halfWidth, -halfHeight)) + position;
 			//minYmaxX
-			globalPoints[1] = globalTransform * (centrePoint + halfWidth - halfHeight) + position;
+			globalPoints[1] = globalTransform * (centrePoint + new Vector2(halfWidth, -halfHeight)) + position;
 			//maxYmaxX 
-			globalPoints[2] = globalTransform * (centrePoint + halfWidth + halfHeight) + position;
+			globalPoints[2] = globalTransform * (centrePoint + new Vector2(halfWidth, halfHeight)) + position;
 			//maxYminX 
-			globalPoints[3] = globalTransform * (centrePoint - halfWidth + halfHeight) + position;
+			globalPoints[3] = globalTransform * (centrePoint + new Vector2(-halfWidth, halfHeight)) + position;
 		}
 
 		public Vector2[] GetGlobalPoints()
@@ -137,12 +144,18 @@ namespace Project2D
 
 		public Vector2 GetLocalHalfWidthHeightVector()
 		{
-			return new Vector2(halfWidth.x, halfHeight.y);
+			return new Vector2(halfWidth, halfHeight);
 		}
 		
 		public Vector2 GetCentrePoint()
 		{
 			return (Matrix3.GetTranslation(centrePoint) * globalTransform).GetTranslation();
+		}
+
+		public Collider Clone()
+		{
+			Collider c = new Collider(centrePoint, halfWidth * 2, halfHeight * 2, layer);
+			return c;
 		}
 	}
 
@@ -164,6 +177,13 @@ namespace Project2D
 			halfWidth = (bottomRight.x - topLeft.x) / 2;
 			halfHeight = (bottomRight.y - topLeft.y) / 2;
 			centre = new Vector2(topLeft.x + halfWidth, topLeft.y + halfHeight);
+		}
+
+		public AABB(Vector2 centrePoint, float width, float height)
+		{
+			centre = centrePoint;
+			halfWidth = width / 2;
+			halfHeight = height / 2;
 		}
 
 		public static AABB GetAABBFromPoints(Vector2[] points)
@@ -209,7 +229,7 @@ namespace Project2D
 	enum CollisionLayer
 	{
 		Default,
-		ScreenBounds,
+		Enemy,
 		Player,
 		Objects,
 		Count

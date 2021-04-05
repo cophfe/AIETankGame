@@ -41,6 +41,10 @@
     <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Drawing.Common, Version=4.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Drawing.Common.5.0.2\lib\net461\System.Drawing.Common.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,6 +53,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MapFromImage.cs" />
+    <Compile Include="ObjectScripts\Button.cs" />
+    <Compile Include="ObjectScripts\Chicken.cs" />
+    <Compile Include="ObjectScripts\Feather.cs" />
     <Compile Include="PlayerScripts\Arm.cs" />
     <Compile Include="ObjectScripts\SmoothCamera.cs" />
     <Compile Include="CollisionScripts\CollisionManager.cs" />
@@ -68,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\Raylib\Bindings\Raylib.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

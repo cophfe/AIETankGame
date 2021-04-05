@@ -29,7 +29,7 @@ namespace Project2D
 			position = offset;
 		}
 
-		public override void Update(float deltaTime)
+		public override void Update()
 		{
 			Vector2 mousePos = Game.camera.GetMouseWorldPosition();
 			int sign = Math.Sign(mousePos.x - GlobalPosition.x);
@@ -61,7 +61,7 @@ namespace Project2D
 			if (float.IsNaN(rotation))
 				Console.WriteLine("AAAAAHHHH");
 
-			base.Update(deltaTime);
+			base.Update();
 		}
 	}
 }

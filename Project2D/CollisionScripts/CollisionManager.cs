@@ -9,19 +9,19 @@ using Mlib;
 
 namespace Project2D
 {
-	static class CollisionManager
+	class CollisionManager
 	{
 		
-		public static List<PhysicsObject> objList = new List<PhysicsObject>();
-		public static List<CollisionPair> collisions = new List<CollisionPair>();
+		public List<PhysicsObject> objList = new List<PhysicsObject>();
+		public List<CollisionPair> collisions = new List<CollisionPair>();
 
-		public static void AddObject(PhysicsObject obj)
+		public void AddObject(PhysicsObject obj)
 		{
 			if (obj.GetCollider() != null)
 				objList.Add(obj);
 		}
 
-		public static void CheckCollisions(params CollisionLayer[] ignored)
+		public void CheckCollisions(params CollisionLayer[] ignored)
 		{
 			collisions.Clear();
 			for (int i = 0; i < objList.Count; i++)
@@ -75,13 +75,13 @@ namespace Project2D
 			for (int i = 0; i < collisionPoints.points.Count; i++)
 			{
 				//The radius vectors from the collision
-				Vector2 radiusA = (collisionPoints.points[i] - pair.a.GlobalPosition);
-				Vector2 radiusB = (collisionPoints.points[i] - pair.b.GlobalPosition);
+				Vector2 radiusA = (collisionPoints.points[i] - pair.a.GetCollider().GetCentrePoint());
+				Vector2 radiusB = (collisionPoints.points[i] - pair.b.GetCollider().GetCentrePoint());
 				
-				Vector2 rV = (pair.b.GetVelocity() + Vector2.zCross(pair.b.GetAngularVelocity(), radiusB)) + (pair.a.GetVelocity() + Vector2.zCross(pair.a.GetAngularVelocity(), radiusA));
+				Vector2 rV = (pair.b.GetVelocity() + Vector2.zCross(pair.b.GetAngularVelocity(), radiusB)) - (pair.a.GetVelocity() + Vector2.zCross(-pair.a.GetAngularVelocity(), radiusA));
 
-				if (Vector2.Dot(pair.b.GetVelocity() - pair.a.GetVelocity(), normal) > 0)
-					return;
+				//if (Vector2.Dot(pair.b.GetVelocity() - pair.a.GetVelocity(), normal) > 0)
+				//	return;
 				float projectedRV = Vector2.Dot(rV, normal);
 
 				float rACrossN = radiusA.zCross(normal);
@@ -90,20 +90,34 @@ namespace Project2D
 				//impulse is spread evenly between collision points
 				float impulseMagnitude = (-(1 + Math.Min(pair.a.restitution, pair.b.restitution)) * projectedRV) / ((aIM + bIM + (rACrossN * rACrossN) * aII + (rBCrossN * rBCrossN) * bII) * collisionPoints.points.Count);
 				Vector2 impulse = normal * impulseMagnitude;
-
-				pair.a.AddImpulseAtPosition(-1 * impulse, radiusA);
 				
-				pair.b.AddImpulseAtPosition(impulse, radiusB);
+				//if (normal.Dot(pair.b.GetCollider().GetCentrePoint() - pair.a.GetCollider().GetCentrePoint()) < 0)
+				{
+					pair.a.AddImpulseAtPosition(-1 * impulse, radiusA);
+					pair.b.AddImpulseAtPosition(impulse, radiusB);
+
+				}
 			}
-			if (aIM != 0)
-				pair.a.AddPosition(normal * -penetration);
-			if (bIM != 0)
-				pair.b.AddPosition(normal * penetration);
+			if (normal.Dot(pair.b.GetCollider().GetCentrePoint() - pair.a.GetCollider().GetCentrePoint()) > 0)
+			{
+				if (aIM != 0)
+					pair.a.AddPosition(normal * -penetration);
+				if (bIM != 0)
+					pair.b.AddPosition(normal * penetration);
+			}
+			else
+			{
+				if (aIM != 0)
+					pair.a.AddPosition(normal * penetration);
+				if (bIM != 0)
+					pair.b.AddPosition(normal * -penetration);
+			}
 		}
 
 		#region Ray Casting
-
-		public static bool RayCast(Ray ray, out Hit hit, params CollisionLayer[] ignoredLayers)
+		static Matrix3 rotateClock = Matrix3.GetRotateZ(Trig.pi /2);
+		static Matrix3 rotateAntiClock = Matrix3.GetRotateZ(Trig.pi / -2);
+		public bool RayCast(Ray ray, out Hit hit, params CollisionLayer[] ignoredLayers)
 		{
 			//this raycast was done using this algorithm 
 			//http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-custom-ray-obb-function/
@@ -115,10 +129,10 @@ namespace Project2D
 			
 			for (int i = 0; i < objList.Count; i++)
 			{
-				if (ignoredLayers.Contains(objList[i].GetCollider().GetLayer()))
+				Collider rect = objList[i].GetCollider();
+				if (ignoredLayers.Contains(rect.GetLayer()))
 					continue;
 
-				Collider rect = objList[i].GetCollider();
 				Vector2 relative = rect.GetCentrePoint() - ray.position;
 				Matrix3 t = objList[i].GetGlobalTransform();
 				float minTotalDistance = 0;
@@ -165,12 +179,6 @@ namespace Project2D
 					if (minimumDistance > 0)
 					{
 						minTotalDistance = minimumDistance;
-					}
-
-					//if max distance is less than min distance then the objects are not colliding
-					if (maxTotalDistance < minTotalDistance)
-					{
-						continue;
 					}
 				}
 				else if (min.x - e > 0 || max.x - e < 0)
@@ -228,7 +236,7 @@ namespace Project2D
 			return false;
 		}
 
-		public static bool RayCastToCollider(Ray ray, out Hit hit, Collider collider)
+		public bool RayCastToCollider(Ray ray, out Hit hit, Collider collider)
 		{
 			hit = new Hit(0, null);
 			Collider rect = collider;
@@ -317,7 +325,7 @@ namespace Project2D
 			return true;
 		}
 
-		public static bool RayCastSimple(Ray ray, out List<PhysicsObject> hitObjects, params CollisionLayer[] ignoredLayers)
+		public bool RayCastSimple(Ray ray, out List<PhysicsObject> hitObjects, params CollisionLayer[] ignoredLayers)
 		{
 			//this raycaster simply checks if a ray is within the smaller angle between two vectors
 			//those vectors are based on the points of a collider.
@@ -396,39 +404,25 @@ namespace Project2D
 			float pV;
 			float a;
 			float b;
+			penetration = 0;
+			collisionNormal = Vector2.Zero;
 			collisionPoints = null;
 			//A X Axis
 			///////////////////////////////////////////////////////////////////
 			if (!doPA(aTransform.GetRightVector()))
-			{
-				penetration = 0;
-				collisionNormal = Vector2.Zero;
 				return;
-			}
 			//A Y Axis
 			//////////////////////////////////////////////////////////////////
 			if (!doPA(aTransform.GetForwardVector()))
-			{
-				penetration = 0;
-				collisionNormal = Vector2.Zero;
 				return;
-			}
 			//B X Axis
 			//////////////////////////////////////////////////////////////////
 			if (!doPB(bTransform.GetRightVector()))
-			{
-				penetration = 0;
-				collisionNormal = Vector2.Zero;
 				return;
-			}
 			//B Y Axis
 			//////////////////////////////////////////////////////////////////
 			if (!doPB(bTransform.GetForwardVector()))
-			{
-				penetration = 0;
-				collisionNormal = Vector2.Zero;
 				return;
-			}
 			//////////////////////////////////////////////////////////////////
 			
 			collisionNormal = normal;
@@ -440,7 +434,7 @@ namespace Project2D
 			// ^ all other sources I could find on the internet are based off this
 
 
-			if (pair.a.GetInverseInertia() == 0 && pair.a.GetInverseInertia() == 0)
+			if (pair.a.GetInverseInertia() == 0 && pair.b.GetInverseInertia() == 0)
 			{
 				//no need to calculate
 				collisionPoints = new CollisionPoints(new List<Vector2>() { Vector2.One });
@@ -448,10 +442,6 @@ namespace Project2D
 			}
 			Vector2[] mainPoints;
 			Vector2[] secondaryPoints;
-			
-			//normal should point from a to b or freaky things happen yo
-
-			Vector2 direction = bCol.GetCentrePoint() - aCol.GetCentrePoint();
 			
 			mainPoints = bCol.GetGlobalPoints();
 			secondaryPoints = aCol.GetGlobalPoints();
@@ -476,7 +466,7 @@ namespace Project2D
 			Vector2 refV = (reference.v2 - reference.v1).Normalised();
 
 			float o1 = refV.Dot(reference.v1);
-			CollisionPoints cP = Clip(incident.v1, incident.v2, refV, o1);
+			CollisionPoints cP = Trim(incident.v1, incident.v2, refV, o1);
 
 			if (cP.points.Count < 2)
 			{
@@ -485,7 +475,7 @@ namespace Project2D
 			}
 
 			float o2 = refV.Dot(reference.v2);
-			cP = Clip(cP.points[0], cP.points[1], -1 * refV, -o2);
+			cP = Trim(cP.points[0], cP.points[1], -1 * refV, -o2);
 
 			if (cP.points.Count < 2)
 			{
@@ -511,22 +501,14 @@ namespace Project2D
 			}
 
 			collisionPoints = cP;
-
-			Game.v = cP.points[0];
-			if (cP.points.Count > 1)
-				Game.v2 = cP.points[1];
-			else
-			{
-				Game.v2 = cP.points[0];
-
-			}
 			return;
 
-			CollisionPoints Clip(Vector2 point1, Vector2 point2, Vector2 n, float limit)
+			#region Local Functions
+			CollisionPoints Trim(Vector2 point1, Vector2 point2, Vector2 norm, float limit)
 			{
 				List<Vector2> clippedPoints = new List<Vector2>(2);
-				float d1 = n.Dot(point1) - limit;
-				float d2 = n.Dot(point2) - limit;
+				float d1 = norm.Dot(point1) - limit;
+				float d2 = norm.Dot(point2) - limit;
 
 				if (d1 >= 0) clippedPoints.Add(point1);
 				if (d2 >= 0) clippedPoints.Add(point2);
@@ -632,11 +614,17 @@ namespace Project2D
 					return false;
 				}
 			}
+			#endregion
 		}
-		
-		public static List<PhysicsObject> GetObjectList()
+
+		public List<PhysicsObject> GetObjectList()
 		{
 			return objList;
+		}
+
+		public void RemoveConnection(PhysicsObject obj)
+		{
+			objList.Remove(obj);
 		}
 	}
 

@@ -19,7 +19,7 @@ namespace Project2D
 		int lastFrame = 0;
 		Texture2D[] frames;
 		int currentFrame = 0;
-		bool animated = false;
+		bool isAnimated = false;
 		bool pause = false;
 		Rectangle spriteRectangle;
 		Rectangle textureRectangle;
@@ -31,27 +31,35 @@ namespace Project2D
 		bool flipY = false;
 		Rectangle flipped;
 		GameObject attachedGameObject;
+		int backwardsMultiplier = 1;
 
-		public Sprite(Texture2D[] frames, float millisecondsEach, int startFrame, int lastFrame, GameObject attached)
+		public Sprite(Texture2D[] frames, float millisecondsEach, int startFrame, int lastFrame, GameObject attached, bool animated = true, float sortValue = 1)
 		{
-			animated = true;
+			this.isAnimated = animated;
 			timeCap = millisecondsEach;
 			this.frames = frames;
 			textureRectangle = new Rectangle { height = frames[0].height, width = frames[0].width };
 			attachedGameObject = attached;
 			this.startFrame = startFrame;
 			this.lastFrame = lastFrame;
+			sort = sortValue;
 		}
-		public Sprite(Texture2D sprite, GameObject attached)
+		public Sprite(Texture2D sprite, GameObject attached, float sortValue = 1)
 		{
 			frames = new Texture2D[1] { sprite };
 			textureRectangle = new Rectangle { height = sprite.height, width = sprite.width };
 			attachedGameObject = attached;
+			sort = sortValue;
 		}
 
 		public float GetSort()
 		{
 			return sort;
+		}
+
+		public void SetSort(float sortValue)
+		{
+			sort = sortValue;
 		}
 
 		public int GetLayer()
@@ -66,18 +74,19 @@ namespace Project2D
 
 		public void Draw()
 		{
-			if (animated && !pause)
+			if (isAnimated && !pause)
 			{
 				timer += Game.currentTime - lastTime;
-				while (timer > timeCap)
+				if (timer > timeCap)
 				{
-					timer -= timeCap;
-					++currentFrame;
-					if (currentFrame == lastFrame)
-						currentFrame = startFrame;
+					timer = 0;
+					currentFrame += 1 * backwardsMultiplier;
+					
 				}
 				lastTime = Game.currentTime;
 			}
+			if (currentFrame > lastFrame)
+				currentFrame = startFrame;
 
 			Vector2 globalPosition;
 			Vector2 globalScale;
@@ -139,15 +148,34 @@ namespace Project2D
 			flipY = isFlipped;
 		}
 
+		public void SetBackwards(bool isBackwards)
+		{
+			backwardsMultiplier = isBackwards ? -1 : 1;
+		}
+
 		public void SetLimits(int start, int end)
 		{
 			startFrame = start;
 			lastFrame = end;
+			if (currentFrame > end)
+			{
+				currentFrame = end;
+			}
 		}
 
 		public int CurrentFrame()
 		{
 			return currentFrame;
+		}
+
+		public int GetWidth()
+		{
+			return frames[0].width;
+		}
+
+		public int GetHeight()
+		{
+			return frames[0].height;
 		}
 
 		public static Texture2D[] GetFramesFromFolder(string folderName)
@@ -170,15 +198,35 @@ namespace Project2D
 		{
 			return tint;
 		}
+
+		public Sprite Clone()
+		{
+			return new Sprite(frames, timeCap, startFrame, lastFrame, null, isAnimated, sort);
+		}
+
+		public void SetAttachedGameObject(GameObject attached)
+		{
+			attachedGameObject = attached;
+		}
 	}
 
 	enum TextureName
 	{
 		None,
-		Crate,
+		Bale,
 		Arm,
 		Player,
 		Grid,
-		Pupil
+		Pupil,
+		Vignette,
+		Button,
+		Eye,
+		Chicken,
+		Feather,
+		Head,
+		HeadFix,
+		CookedChicken,
+		Wall,
+		SideWall
 	}
 }

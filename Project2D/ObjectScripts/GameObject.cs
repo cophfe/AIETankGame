@@ -39,10 +39,7 @@ namespace Project2D
 		#region Initiation
 		public GameObject()
 		{
-			
 			hasPhysics = false;
-			
-
 			Init(TextureName.None, Vector2.Zero, 1, 0, null, false);
 		}
 
@@ -58,7 +55,6 @@ namespace Project2D
 
 		protected void Init(TextureName image, Vector2 position, float scale, float rotation, GameObject parent, bool isDrawn = true)
 		{
-
 			this.isDrawn = isDrawn;
 
 			id = idCounter;
@@ -66,21 +62,21 @@ namespace Project2D
 			spriteManager = new Sprite(Game.GetTextureFromName(image), this);
 			
 			if (parent != null)
-				parent.addChild(this);
+				parent.AddChild(this);
 
 			//position and scale will be zero if no values are given
 			localTransform = Matrix3.GetTranslation(position) * Matrix3.GetRotateZ(rotation) * Matrix3.GetScale(Vector2.One * scale);
 			this.position = position;
 			this.rotation = rotation;
 			this.scale = Vector2.One * scale;
-			sortingOffset = spriteManager.CurrentTexture().height / 2;
+			sortingOffset = spriteManager.CurrentTexture().height / 2 * scale;
 			UpdateTransforms();
 		}
 
 		#endregion
 
 		#region Scene Tree Methods
-		public void addChild(GameObject child)
+		public virtual void AddChild(GameObject child)
 		{
 			children.Add(child);
 			child.SetParent(this);
@@ -110,21 +106,11 @@ namespace Project2D
 		}
 		#endregion
 
-		public virtual void Update(float deltaTime)
+		public virtual void Update()
 		{
-
-			foreach (var child in children)
+			for (int i = 0; i < children.Count; i++)
 			{
-				child.Update(deltaTime);
-			}
-		}
-
-		public virtual void LateUpdate(float deltaTime)
-		{
-
-			foreach (var child in children)
-			{
-				child.Update(deltaTime);
+				children[i].Update();
 			}
 		}
 
@@ -174,14 +160,44 @@ namespace Project2D
 			return spriteManager;
 		}
 
+		public void SetSprite(Sprite sprite) 
+		{
+			spriteManager = sprite;
+		}
+
 		public float GetSortingOffset()
 		{
 			return sortingOffset;
 		}
 
+		public void SetSortingOffset(float offset)
+		{
+			sortingOffset = offset;
+		}
+
 		public virtual void SetTint(Colour c)
 		{
-			spriteManager.SetTint(c);
+			if (spriteManager != null)
+				spriteManager.SetTint(c);
+		}
+
+		public void SetDrawn(bool isDrawn)
+		{
+			this.isDrawn = isDrawn;
+		}
+
+		public bool GetDrawn()
+		{
+			return isDrawn;
+		}
+
+		public virtual GameObject Clone()
+		{
+			GameObject g = new GameObject(TextureName.None, GlobalPosition, GlobalScale.x, GlobalRotation, parent, isDrawn);
+			g.SetSprite(spriteManager.Clone());
+			g.GetSprite().SetAttachedGameObject(g);
+			g.SetSortingOffset(sortingOffset);
+			return g;
 		}
 
 		#region Transformations
@@ -262,7 +278,6 @@ namespace Project2D
 				rotation %= Trig.pi * 2;
 			}
 		}
-
 		public float LocalRotation
 		{
 			get

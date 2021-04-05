@@ -26,8 +26,8 @@ namespace Project2D
 		public float drag = 0f;
 		protected float mass = 1;
 		protected float iMass = 1;
-		protected float inertia;
-		protected float iInertia;
+		protected float inertia = 1;
+		protected float iInertia = 1;
 
 		public float gravity = 0;
 
@@ -45,7 +45,7 @@ namespace Project2D
 			{
 				collider.SetConnectedPhysicsObject(this);
 				collider.GetMass(out mass, out inertia);
-				CollisionManager.AddObject(this);
+				Game.GetCurrentScene().GetCollisionManager().AddObject(this);
 			}
 			
 			if (isDynamic)
@@ -72,28 +72,30 @@ namespace Project2D
 			drag = 0;
 		}
 
-
 		public Collider GetCollider()
 		{
 			return collider;
 		}
 
-		public void SetCollider(Collider collider, bool recalculateMass = false)
+		public void SetCollider(Collider collider, Scene scene, bool recalculateMass = false)
 		{
+			if (this.collider != null)
+				RemoveCollider(scene);
 			this.collider = collider;
+			collider.SetConnectedPhysicsObject(this);
 			if (recalculateMass)
 			{
 				collider.GetMass(out mass, out inertia);
 				iMass = 1 / mass;
 				iInertia = 1 / inertia;
 			}
-			CollisionManager.AddObject(this);
+			scene.GetCollisionManager().AddObject(this);
 		}
 
-		public void RemoveCollider()
+		public void RemoveCollider(Scene scene)
 		{
 			this.collider = null;
-			CollisionManager.AddObject(this);
+			scene.GetCollisionManager().RemoveConnection(this);
 		}
 
 		// NOTE:
@@ -153,29 +155,41 @@ namespace Project2D
 		public void AddImpulseAtPosition(Vector2 impulse, Vector2 position)
 		{
 			velocity += iMass * impulse;
-			angularVelocity += -iInertia * position.zCross(impulse);
+			angularVelocity += iInertia * (-1 * position).zCross(impulse);
 		}
 
-		public override void Update(float deltaTime)
+		public override void Update()
 		{
 			if (hasPhysics)
 			{
-				velocity += force * (deltaTime * iMass);
-				velocity -= velocity * Math.Min(1, drag * deltaTime);
+				velocity += force * (Game.deltaTime * iMass);
+				velocity -= velocity * Math.Min(1, drag * Game.deltaTime);
 
-				position += velocity * deltaTime;
+				position += velocity * Game.deltaTime;
 				
-				angularVelocity += torque * iInertia * deltaTime;
-				angularVelocity -= angularVelocity * angularDrag * deltaTime;
+				angularVelocity += torque * iInertia * Game.deltaTime;
+				angularVelocity -= angularVelocity * angularDrag * Game.deltaTime;
 
-				rotation += angularVelocity * deltaTime;
+				rotation += angularVelocity * Game.deltaTime;
 
 				//angularVelocity += (float)(torque * iInertia * deltaTime);
 				
 
 				force = Vector2.Zero;
 			}
-			base.Update(deltaTime);
+			base.Update();
+		}
+
+		public override GameObject Clone()
+		{
+			PhysicsObject p = new PhysicsObject(TextureName.None, GlobalPosition, GlobalScale.x, collider.Clone(), drag, angularDrag, restitution, GlobalRotation, parent, density, mass != 0, inertia != 0, isDrawn);
+			p.SetSprite(spriteManager.Clone());
+			p.SetSortingOffset(sortingOffset);
+			p.GetSprite().SetAttachedGameObject(p);
+			p.velocity = velocity;
+			p.angularVelocity = angularVelocity;
+			p.force = force;
+			return p;
 		}
 	}
 }
