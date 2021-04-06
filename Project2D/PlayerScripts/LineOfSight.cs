@@ -14,17 +14,22 @@ namespace Project2D
 		static CollisionLayer[] ignoredLayers = new CollisionLayer[0];
 		static List<PhysicsObject> list;
 		static Vector2 origin;
-		static RLVector2[] points;
+		static Vector2 screenOffset;
+		static RLVector2[] points = new RLVector2[0];
 		static Matrix3 offset = Matrix3.GetRotateZ(0.0001f);
 		static Matrix3 offsetBack = Matrix3.GetRotateZ(-0.0001f);
-		static float rayLimit = 5000;
+		static float rayLimit = 1000;
+		static float centreDistLimit = rayLimit;
 		static Colour darkTint = new Colour(255, 255, 255, 50);
 		static CollisionManager cM;
+		static RenderTexture2D lineOfSightTexture;
 
 		static public void Initiate(Scene scene)
 		{
 			cM = scene.GetCollisionManager();
 			list = cM.GetObjectList();
+			lineOfSightTexture = LoadRenderTexture((int)Game.screenWidth * 2, (int)Game.screenHeight * 2);
+			screenOffset = new Vector2(-Game.screenWidth, -Game.screenHeight);
 		}
 
 		public static void SetIgnored(params CollisionLayer[] ignored)
@@ -34,7 +39,7 @@ namespace Project2D
 
 		public static void Update()
 		{
-			PhysicsObject[] array = list.Where(obj => !ignoredLayers.Contains(obj.GetCollider().GetLayer())).ToArray();
+			PhysicsObject[] array = list.Where(obj => !ignoredLayers.Contains(obj.GetCollider().GetLayer()) && (obj.GetCollider().GetCentrePoint() - origin).MagnitudeSquared() < centreDistLimit * centreDistLimit).ToArray();
 			int count = array.Length;
 			points = new RLVector2[count * 12 + 12];
 			Hit hit;
@@ -51,7 +56,7 @@ namespace Project2D
 				for (int j = 0; j < objectPoints.Length; j++)
 				{
 					ray = new Ray(origin, (objectPoints[j] - origin).Normalised());
-					if (cM.RayCast(ray, out hit, ignoredLayers))
+					if (cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers))
 					{
 						points[i * 12 + 3 * j] = ray.direction * hit.distanceAlongRay + ray.position;
 					}
@@ -60,7 +65,7 @@ namespace Project2D
 						points[i * 12 + 3 * j] = ray.direction * rayLimit + ray.position;
 					}
 					ray = new Ray(origin, offset * (objectPoints[j] - origin).Normalised());
-					if (cM.RayCast(ray, out hit, ignoredLayers))
+					if (cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers))
 					{
 						//hit.objectHit.SetTint(RLColor.WHITE);
 						points[i * 12 + 3 * j + 1] = ray.direction * hit.distanceAlongRay + ray.position;
@@ -70,7 +75,7 @@ namespace Project2D
 						points[i * 12 + 3 * j + 1] = ray.direction * rayLimit + ray.position;
 					}
 					ray = new Ray(origin, offsetBack * (objectPoints[j] - origin).Normalised());
-					if (cM.RayCast(ray, out hit, ignoredLayers))
+					if (cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers))
 					{
 						points[i * 12 + 3 * j + 2] = ray.direction * hit.distanceAlongRay + ray.position;
 					}
@@ -85,36 +90,37 @@ namespace Project2D
 			count *= 12;
 			Vector2 screenVector = new Vector2(Game.screenHeight, Game.screenWidth).Normalised();
 			ray = new Ray(origin, screenVector);
-			points[count] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			ray = new Ray(origin, offset * screenVector);
-			points[count + 1] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 1] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			ray = new Ray(origin, offsetBack * screenVector);
-			points[count + 2] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 2] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			
 			screenVector.x = -1 * screenVector.x;
 			ray = new Ray(origin, screenVector);
-			points[count + 3] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 3] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			ray = new Ray(origin, offset * screenVector);
-			points[count + 4] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 4] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			ray = new Ray(origin, offsetBack * screenVector);
-			points[count + 5] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 5] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 
 			screenVector.y = -1 * screenVector.y;
 			ray = new Ray(origin, screenVector);
-			points[count + 6] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 6] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			ray = new Ray(origin, offset * screenVector);
-			points[count + 7] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 7] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			ray = new Ray(origin, offsetBack * screenVector);
-			points[count + 8] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 8] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 
 			screenVector.x = -1 * screenVector.x;
 			ray = new Ray(origin, screenVector);
-			points[count + 9] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 9] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			ray = new Ray(origin, offset * screenVector);
-			points[count + 10] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+			points[count + 10] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
 			ray = new Ray(origin, offsetBack * screenVector);
-			points[count + 11] = cM.RayCast(ray, out hit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
-			
+			points[count + 11] = cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers) ? ray.direction * hit.distanceAlongRay + ray.position : ray.direction * rayLimit + ray.position;
+
+			UpdateTexture();
 		}
 
 		public static void SetMaxDist(float val)
@@ -122,34 +128,49 @@ namespace Project2D
 			rayLimit = val;
 		}
 
-		public static void Draw()
+		static void UpdateTexture()
 		{
-			points = points.OrderBy(p => -Math.Atan2(p.y - origin.y, p.x - origin.x)).ToArray<RLVector2>();
-			
+			points = points.OrderBy(p => -Math.Atan2(p.y - origin.y, p.x - origin.x)).ToArray();
+
 			RLVector2[] plusOrigin = new RLVector2[points.Length + 2];
 			for (int i = 0; i < points.Length; i++)
 			{
-				plusOrigin[i + 1] = points[i];
+				plusOrigin[i + 1] = points[i] - origin - screenOffset;
 			}
-			plusOrigin[0] = origin;
+			plusOrigin[0] = -1 * screenOffset;
 			plusOrigin[plusOrigin.Length - 1] = plusOrigin[1];
 
-			DrawTriangleFan(plusOrigin, plusOrigin.Length, new RLColor { a = 170, r = 255, g = 210, b = 86});
-			
+
+			BeginTextureMode(lineOfSightTexture);
+			ClearBackground(RLColor.BLACK);
+			DrawTriangleFan(plusOrigin, plusOrigin.Length, RLColor.WHITE);
+			EndTextureMode();
+
+		}
+		public static void Draw()
+		{
+			BeginBlendMode(BlendMode.BLEND_MULTIPLIED);
+			DrawTextureRec(lineOfSightTexture.texture, new Rectangle { width = lineOfSightTexture.texture.width, height = -lineOfSightTexture.texture.height }, origin + screenOffset, RLColor.WHITE);
+			EndBlendMode();
+
 			//Some useful visualization if needed:
-			//foreach (var p in points)
+			
+			//if (points.Length > 0)
 			//{
-			//	if (p != Vector2.Zero)
+			//	foreach (var p in points)
 			//	{
-			//		DrawCircle((int)p.x, (int)p.y, 4, RLColor.RED);
-			//		DrawLineEx(origin, p, 2, RLColor.RED);
+			//		if (p != Vector2.Zero)
+			//		{
+			//			DrawCircle((int)p.x, (int)p.y, 4, RLColor.RED);
+			//			DrawLineEx(origin, p, 2, RLColor.RED);
+			//		}
 			//	}
+			//	for (int i = 0; i < points.Length - 1; i++)
+			//	{
+			//		DrawLineEx(points[i], points[i + 1], 4, RLColor.ORANGE);
+			//	}
+			//	DrawLineEx(points[points.Length - 1], points[0], 4, RLColor.BLUE);
 			//}
-			//for (int i = 0; i < points.Length - 1; i++)
-			//{
-			//	DrawLineEx(points[i], points[i + 1], 4, RLColor.ORANGE);
-			//}
-			//DrawLineEx(points[points.Length - 1], points[0], 4, RLColor.ORANGE);
 		}
 
 		public static void SetOrigin(Vector2 point)

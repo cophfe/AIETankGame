@@ -17,13 +17,14 @@ namespace Project2D
         public static long currentTime = 0;
         private long lastTime = 0;
         private float timer = 0;
-        private int fps = 1;
+        public static int fps = 1;
         private int frames;
         public bool pause = false;
         static public float deltaTime = 0.005f;
 
         public static float screenWidth;
         public static float screenHeight;
+
         //Scenes are gameobjects that hold every other gameobject
         static List<Scene> scenes = new List<Scene>();
 
@@ -39,8 +40,6 @@ namespace Project2D
         }
 
         Character player;
-        PhysicsObject crate;
-        PhysicsObject crate2;
 
         public void Init()
         {
@@ -81,14 +80,12 @@ namespace Project2D
             scenes.Add(startMenu);
             //scenes.Add(game);
             startMenu.backgroundColor = new Colour();
-            startMenu.AddChild(new GameObject(TextureName.Eye, new Vector2(screenWidth/2 - 300, 300), 0.3f, 0));
-            startMenu.AddChild(new GameObject(TextureName.Eye, new Vector2(screenWidth/2 + 300, 300), 0.3f, 0));
+            startMenu.AddChild(new GameObject(TextureName.Eye, new Vector2(screenWidth/2 - 300, 300), 0.3f, 0, null, true, SpriteLayer.Background));
+            startMenu.AddChild(new GameObject(TextureName.Eye, new Vector2(screenWidth/2 + 300, 300), 0.3f, 0, null, true, SpriteLayer.Background));
             Eye eye = new Eye(new Vector2(screenWidth / 2 - 300, 300), 70, 2f);
             Eye eye2 = new Eye(new Vector2(screenWidth / 2 + 300, 300), eye);
             startMenu.AddChild(eye);
             startMenu.AddChild(eye2);
-            eye.SetSortingOffset(1000);
-            eye2.SetSortingOffset(1000);
             Button playButton = new Button(TextureName.Button, 430, 250, new Vector2(screenWidth / 2, screenHeight - 300), 1, null);
             playButton.AddHoverEvent(() =>
             {
@@ -116,10 +113,10 @@ namespace Project2D
 
             playButton.AddEnterEvent(() =>
             {
-                playButton.GetSprite().SetTint(new RLColor(240,230,250,255));
+                playButton.GetSprite().SetTint(new RLColor(220,200,225,255));
                 
             });
-            playButton.SetSprite(new Sprite(Sprite.GetFramesFromFolder("PlayButton"), 100, 0, 1, playButton, false));
+            playButton.SetSprite(new Sprite(Sprite.GetFramesFromFolder("PlayButton"), 100, 0, 1, playButton, RLColor.WHITE, false));
             startMenu.AddUIElement(playButton);
             startMenu.backgroundColor = new Colour(83, 83, 116, 255);
 
@@ -127,13 +124,14 @@ namespace Project2D
             scenes.Add(s);
             currentScene++;
             player = new Character(TextureName.Player, new Vector2(250, 250), 0.3f, 0, null, new Collider(-40, 45, 80, 60));
-            MapFromImage.MakeSceneFromImage(new PhysicsObject(TextureName.Wall, Vector2.One * 300, 1f, new Collider(-135.5f, -92f, 271f, 271f), 1f, 1, 0f, 0, null, 1, false),
-                new PhysicsObject(TextureName.Bale, Vector2.Zero, 0.7f, Collider.FromTextureName(TextureName.Bale), 1f, 1, 0f, 0, null, 1, true),
+            MapFromImage.MakeSceneFromImage(new PhysicsObject(TextureName.Wall, Vector2.One * 300, 1f, new Collider(-135.5f, -92f, 271f, 271f), 1f, 1, 3f, 0, null, 1, false),//new Collider(-135.5f, -92f, 271f, 271f)
+                new PhysicsObject(TextureName.Bale, Vector2.Zero, 0.7f, Collider.FromTextureName(TextureName.Bale), 3f, 3, 0f, 0, null, 0.7f, true),
                 player,
                 new Chicken(TextureName.Chicken, Vector2.Zero, player),
                 "../Images/map.png", s);
             camera = new SmoothCamera(scenes[1], player.GlobalPosition, 0, 1f, new Vector2(0, 0), true, CollisionLayer.Player, CollisionLayer.Enemy);
-            camera.Target(player);
+            player.SetTiedCamera(camera);
+            camera.LocalPosition = player.LocalPosition;
 
             currentScene = 0;
         }
@@ -143,9 +141,6 @@ namespace Project2D
 
         public void Update()
         {
-            scenes[currentScene].UpdateUI();
-            if (pause)
-                return;
             lastTime = currentTime;
             currentTime = stopwatch.ElapsedMilliseconds;
             deltaTime = (currentTime - lastTime) / 1000.0f;
@@ -158,6 +153,10 @@ namespace Project2D
             }
             frames++;
 
+            scenes[currentScene].UpdateUI();
+            if (pause)
+                return;
+
             //Update game objects here
             scenes[currentScene].Update();
             scenes[currentScene].UpdateTransforms();
@@ -167,9 +166,8 @@ namespace Project2D
         public void Draw()
         {
             //draw all objects and UI
+            
             scenes[currentScene].Draw();
-
-            DrawFPS(10, 10);
         }
 
         public static Texture2D GetTextureFromName(TextureName name)

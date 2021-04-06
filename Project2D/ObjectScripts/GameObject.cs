@@ -43,9 +43,9 @@ namespace Project2D
 			Init(TextureName.None, Vector2.Zero, 1, 0, null, false);
 		}
 
-		public GameObject(TextureName image, Vector2 position, float scale, float rotation = 0, GameObject parent = null, bool isDrawn = true)
+		public GameObject(TextureName image, Vector2 position, float scale, float rotation = 0, GameObject parent = null, bool isDrawn = true, SpriteLayer layer = SpriteLayer.Midground)
 		{
-			Init(image, position, scale, rotation, parent, isDrawn);
+			Init(image, position, scale, rotation, parent, isDrawn, layer);
 		}
 
 		public GameObject(TextureName image)
@@ -53,13 +53,13 @@ namespace Project2D
 			Init(image, Vector2.Zero, 1, 0, null, true);
 		}
 
-		protected void Init(TextureName image, Vector2 position, float scale, float rotation, GameObject parent, bool isDrawn = true)
+		protected void Init(TextureName image, Vector2 position, float scale, float rotation, GameObject parent, bool isDrawn = true, SpriteLayer layer = SpriteLayer.Midground)
 		{
 			this.isDrawn = isDrawn;
 
 			id = idCounter;
 			idCounter++;
-			spriteManager = new Sprite(Game.GetTextureFromName(image), this);
+			spriteManager = new Sprite(Game.GetTextureFromName(image), this, RLColor.WHITE, 1, layer);
 			
 			if (parent != null)
 				parent.AddChild(this);
@@ -102,7 +102,8 @@ namespace Project2D
 			{
 				child.Delete();
 			}
-			parent.RemoveChild(this);
+			if (parent != null)
+				parent.RemoveChild(this);
 		}
 		#endregion
 
@@ -131,12 +132,19 @@ namespace Project2D
 				spriteManager.Draw();
 			}
 
+			for (int i = 0; i < children.Count; i++)
+			{
+				children[i].Draw();
+			}
+		}
+
+		public void SortChildren()
+		{
 			//using insertion sort because it is fast for when an array is almost sorted
 			//also it is stable which is important
 			GameObject cache;
 			int j;
-			int n = children.Count;
-			for (int i = 1; i < n; i++)
+			for (int i = 1; i < children.Count; i++)
 			{
 				cache = children[i];
 				j = i - 1;
@@ -147,11 +155,6 @@ namespace Project2D
 					j = j - 1;
 				}
 				children[j + 1] = cache;
-			}
-
-			for (j = 0; j < n; j++)
-			{
-				children[j].Draw();
 			}
 		}
 

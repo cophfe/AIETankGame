@@ -12,6 +12,7 @@ namespace Project2D
 	class Eye : GameObject
 	{
 		Vector2 targetPosition;
+		Vector2 cameraOffset;
 		float yOffset = 0;
 		Vector2 flipMultiplier = Vector2.One;
 		Vector2 centeredPosition;
@@ -20,7 +21,7 @@ namespace Project2D
 		bool isMain = true;
 		Eye main = null;
 		bool isLasering = false;
-
+		Vector2 mousePos;
 		public Eye(Vector2 offset, float maxDistance, float size) : base(TextureName.Pupil)
 		{
 			centeredPosition = offset;
@@ -42,11 +43,11 @@ namespace Project2D
 
 		public override void Update()
 		{
+			mousePos = Game.GetCurrentScene().GetCamera().GetMouseWorldPosition();
 			if (isMain)
 			{
-				Vector2 mousePos = Game.GetCurrentScene().GetCamera().GetMouseWorldPosition();
-				targetPosition = mousePos - (middlePoint * flipMultiplier + parent.GlobalPosition);
-				targetPosition = targetPosition.MagnitudeSquared() > maxDistance * maxDistance ? targetPosition.Normalised() * maxDistance : targetPosition;
+				cameraOffset = mousePos - (middlePoint * flipMultiplier + parent.GlobalPosition);
+				targetPosition = cameraOffset.MagnitudeSquared() > maxDistance * maxDistance ? cameraOffset.Normalised() * maxDistance : cameraOffset;
 			}
 			else
 			{
@@ -83,29 +84,48 @@ namespace Project2D
 		{
 			return targetPosition;
 		}
+
+		static Random rand = new Random();
+
 		public override void Draw()
 		{
+			
 			if (isLasering)
 			{
-				Ray ray = new Ray(GlobalPosition, targetPosition.Normalised());
+				Vector2 camTarget = parent.LocalPosition;
+				if (isMain)
+				{
+					cameraOffset = (middlePoint + cameraOffset);
+					Console.WriteLine($"{cameraOffset.x}, {cameraOffset.y}, mag: {cameraOffset.Magnitude()}");
+					cameraOffset = cameraOffset.MagnitudeSquared() > 500 * 500 ? cameraOffset.Normalised() * 500: cameraOffset;
+				
+					camTarget += Vector2.Lerp(middlePoint, middlePoint + cameraOffset, 0.1f);
+					
+					(parent as Character).GetTiedCamera().Target(camTarget);
+				}
+				
+				Ray ray = new Ray(GlobalPosition, (mousePos - GlobalPosition).Normalised());
 				Hit hit;
-				if (Game.GetCurrentScene().GetCollisionManager().RayCast(ray, out hit, CollisionLayer.Player))
+				if (Game.GetCurrentScene().GetCollisionManager().RayCast(ray, out hit, 4000, CollisionLayer.Player))
 				{
 					DrawLineEx(ray.position, ray.direction * hit.distanceAlongRay + ray.position, 10, RLColor.RED);
 					if (hit.objectHit.GetCollider().GetLayer() == CollisionLayer.Enemy)
 					{
 						(hit.objectHit as Chicken).cookedValue += Game.deltaTime * 2;
+
+						new Feather(position + new Vector2((float)rand.NextDouble() * 20 - 10, (float)rand.NextDouble() * 20 - 10), (float)rand.NextDouble() * Trig.pi * 2 - Trig.pi, (float)rand.NextDouble() * 0.2f + 0.1f, 10 * ray.direction.Rotated((float)rand.NextDouble() * 0.4f - 0.2f), (float)rand.NextDouble() - 0.5f, Game.GetCurrentScene());
 					}
 					else
 					{
-						hit.objectHit.AddImpulseAtPosition(ray.direction * 2000, (ray.direction * hit.distanceAlongRay + ray.position) - hit.objectHit.GetCollider().GetCentrePoint());
+						hit.objectHit.AddImpulseAtPosition(ray.direction * 9000000 * Game.deltaTime, (ray.direction * hit.distanceAlongRay + ray.position) - hit.objectHit.GetCollider().GetCentrePoint());
 
 					}
 				}
 				else
 					DrawLineEx(GlobalPosition, (GlobalPosition + ray.direction * 1000), 10, RLColor.RED);
 			}
-
+			else if(parent is Character)
+				(parent as Character).GetTiedCamera().Target(parent.LocalPosition);
 			base.Draw();
 		}
 

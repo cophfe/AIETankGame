@@ -25,7 +25,7 @@ namespace Project2D
 		Rectangle textureRectangle;
 		Vector2 origin;
 		float sort = 0;
-		Layers layer = 0;
+		SpriteLayer layer;
 		Colour tint = new Colour(255, 255, 255, 255);
 		bool flipX = false;
 		bool flipY = false;
@@ -33,7 +33,7 @@ namespace Project2D
 		GameObject attachedGameObject;
 		int backwardsMultiplier = 1;
 
-		public Sprite(Texture2D[] frames, float millisecondsEach, int startFrame, int lastFrame, GameObject attached, bool animated = true, float sortValue = 1)
+		public Sprite(Texture2D[] frames, float millisecondsEach, int startFrame, int lastFrame, GameObject attached, Colour tint, bool animated = true, float sortValue = 1, SpriteLayer layer = SpriteLayer.Midground)
 		{
 			this.isAnimated = animated;
 			timeCap = millisecondsEach;
@@ -43,13 +43,18 @@ namespace Project2D
 			this.startFrame = startFrame;
 			this.lastFrame = lastFrame;
 			sort = sortValue;
+			this.layer = layer;
+			this.tint = tint;
+
 		}
-		public Sprite(Texture2D sprite, GameObject attached, float sortValue = 1)
+		public Sprite(Texture2D sprite, GameObject attached, Colour tint, float sortValue = 1, SpriteLayer layer = 0)
 		{
 			frames = new Texture2D[1] { sprite };
 			textureRectangle = new Rectangle { height = sprite.height, width = sprite.width };
 			attachedGameObject = attached;
 			sort = sortValue;
+			this.layer = layer;
+			this.tint = tint;
 		}
 
 		public float GetSort()
@@ -65,6 +70,11 @@ namespace Project2D
 		public int GetLayer()
 		{
 			return (int)layer;
+		}
+
+		public void SetLayer(SpriteLayer val)
+		{
+			layer = val;
 		}
 
 		public Texture2D CurrentTexture()
@@ -201,7 +211,7 @@ namespace Project2D
 
 		public Sprite Clone()
 		{
-			return new Sprite(frames, timeCap, startFrame, lastFrame, null, isAnimated, sort);
+			return new Sprite(frames, timeCap, startFrame, lastFrame, null, tint, isAnimated, sort, layer);
 		}
 
 		public void SetAttachedGameObject(GameObject attached)

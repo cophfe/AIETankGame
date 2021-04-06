@@ -14,7 +14,7 @@ namespace Project2D
 		protected List<GameObject> UI = new List<GameObject>();
 		protected SmoothCamera camera = new SmoothCamera();
 		protected CollisionManager cM = new CollisionManager();
-		public RLColor backgroundColor = new RLColor { a = 255, r = 0x5, g = 0x5, b = 0x00 };
+		public RLColor backgroundColor = new RLColor { a = 0xFF, r = 0x91, g = 0x51, b = 0x1d };
 
 		public Scene(List<GameObject> gameObjects, List<GameObject> UI = null)
 		{
@@ -76,6 +76,7 @@ namespace Project2D
 				j = i - 1;
 
 				while (j >= 0 && children[j].GetSortingOffset() + children[j].LocalPosition.y > cache.GetSortingOffset() + cache.LocalPosition.y)
+			
 				{
 					children[j + 1] = children[j];
 					j = j - 1;
@@ -83,15 +84,22 @@ namespace Project2D
 				children[j + 1] = cache;
 			}
 
-			for (int i = 0; i < (int)Layers.Count; i++)
+			for (int i = 0; i < children.Count; i++)
 			{
-				foreach (var child in children)
+				if (children[i].GetSprite().GetLayer() == (int)SpriteLayer.Background)
+					children[i].Draw();
+			}
+			camera.DrawLineOfSight();
+			for (int i = 1; i < (int)SpriteLayer.Count; i++)
+			{
+				for (int k = 0; k < children.Count; k++)
 				{
-					if (child.GetSprite().GetLayer() == i)
-						child.Draw();
+					if (children[k].GetSprite().GetLayer() == i)
+						children[k].Draw();
 				}
 			}
 
+			camera.StartCamera();
 			//end 2d camera
 			camera.EndCamera();
 
@@ -100,7 +108,7 @@ namespace Project2D
 			{
 				UI[i].Draw();
 			}
-
+			DrawText($"{Game.fps}", 10, 10, 10, RLColor.RED);
 			EndDrawing();
 		}
 
@@ -140,7 +148,7 @@ namespace Project2D
 
 	}
 
-	enum Layers
+	enum SpriteLayer
 	{
 		Background,
 		Midground,

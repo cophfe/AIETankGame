@@ -15,6 +15,7 @@ namespace Project2D
 		{
 			AddAngularVelocity(angularVelocity);
 			AddVelocity(velocity);
+			spriteManager.SetLayer(SpriteLayer.Background);
 		}
 
 		float existanceTimer = 0;
@@ -31,7 +32,6 @@ namespace Project2D
 				}
 			}
 			existanceTimer += Game.deltaTime;
-
 
 			base.Update();
 		}

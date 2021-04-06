@@ -18,7 +18,7 @@ namespace Project2D
 		static Color baleColor = Color.FromArgb(255,255,0);
 		static Color sideWallColor = Color.FromArgb(0,0,255);
 
-		public static void MakeSceneFromImage(PhysicsObject wallTemplate, PhysicsObject baleTemplate, Character player, Chicken chickenTemplate, string map, Scene s)
+		public static void MakeSceneFromImage(PhysicsObject wallTemplate, PhysicsObject baleTemplate, Character player, PhysicsObject chickenTemplate, string map, Scene s)
 		{
 			Bitmap image = new Bitmap(map);
 			float sizeX = wallTemplate.GetSprite().GetWidth() / wallTemplate.LocalScale.x;
@@ -58,11 +58,22 @@ namespace Project2D
 					{
 						cache = wallTemplate.Clone();
 						cache.LocalPosition = new Vector2(sizeX * x, sizeY * y);
-						cache.SetSprite(new Sprite(Game.GetTextureFromName(TextureName.SideWall), cache));
+						cache.SetSprite(new Sprite(Game.GetTextureFromName(TextureName.SideWall), cache, RLColor.WHITE));
+						cache.GetSprite().SetLayer(SpriteLayer.Foreground);
+						
 						s.AddChild(cache);
 					}
 				}
 			}
+
+			baleTemplate.RemoveCollider(s);
+			baleTemplate.Delete();
+			chickenTemplate.RemoveCollider(s);
+			chickenTemplate.Delete();
+			wallTemplate.RemoveCollider(s);
+			wallTemplate.Delete();
+
+
 		}
 	}
 }

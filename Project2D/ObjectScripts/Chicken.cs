@@ -11,7 +11,7 @@ namespace Project2D
 {
 	class Chicken : PhysicsObject
 	{
-		bool still = true;
+		public bool still = true;
 		Character player;
 		public static float distanceToScare = 300;
 		public static float speed = 100;
@@ -23,9 +23,14 @@ namespace Project2D
 		public static float featherExplosionNumber = 24;
 		public static float featherExplosionSpeed = 200;
 		public static float avoidDistance = 50;
+		public static float rayLimit = 1000;
 		public static float cookedLimit = 3;
 		public float cookedValue = 0;
+		float deathY = 0;
 		bool controlledByPlayer = false;
+		static Colour colour = new Colour(255, 255, 255, 255);
+
+		bool falling = false;
 		bool dead = false;
 		bool dying = false;
 		float timer = 0;
@@ -36,11 +41,17 @@ namespace Project2D
 
 		float deathPercentDone = 0;
 		
-		public Chicken(TextureName fileName, Vector2 position, Character player) : base(fileName, position, 0.5f, new Collider(position + new Vector2(32,-50), 90, 110, CollisionLayer.Enemy), density: 0.1f, isRotatable: false)
+		public Chicken(TextureName fileName, Vector2 position, Character player, Sprite loadedSprite = null) : base(fileName, position, 0.5f, new Collider(-40, -55, 80, 110, CollisionLayer.Enemy), 0.5f, 0.5f, 1f, 0f, density: 1, isRotatable: false)
 		{
-			spriteManager = new Sprite(Sprite.GetFramesFromFolder("Chicken"), 24, 1, 11, this);
+			if (loadedSprite != null)
+				spriteManager = loadedSprite;
+			else
+				spriteManager = new Sprite(Sprite.GetFramesFromFolder("Chicken"), 24, 1, 11, this, colour);
+
 			spriteManager.SetFrame(0);
 			spriteManager.Pause();
+			spriteManager.SetLayer(SpriteLayer.Background);
+			spriteManager.SetTint(colour);
 			this.player = player;
 		}
 
@@ -57,7 +68,7 @@ namespace Project2D
 					}
 					else
 					{
-						deathPercentDone += Game.deltaTime * 30;
+						deathPercentDone += Game.deltaTime * 40;
 						if (deathPercentDone >= 100)
 						{
 							rotation = 0;
@@ -66,8 +77,20 @@ namespace Project2D
 						}
 						else
 						{
-							rotation = (float)Math.Sin(Game.currentTime / (150 - deathPercentDone)) * deathPercentDone * 0.001f;
+							rotation = (float)Math.Sin(Game.currentTime / (200 - deathPercentDone * 0.5f)) * deathPercentDone * 0.001f;
 						}
+						
+						new Smoke(LocalPosition + new Vector2((float)rand.NextDouble() * 50 - 25, (float)rand.NextDouble() * 50 - 10), 0, (float)rand.NextDouble() * 0.15f, 5, player.GetChickenPos() + new Vector2((float)rand.NextDouble() * 20 - 10, (float)rand.NextDouble() * 20 - 10), 0, Game.GetCurrentScene());
+					}
+				}
+				else if (falling)
+				{
+					if (deathY > position.y)
+						velocity.y += 1 * Game.deltaTime;
+					else
+					{
+						velocity.y = 0;
+						falling = false;
 					}
 				}
 
@@ -83,8 +106,8 @@ namespace Project2D
 				}
 				return;
 			}
-			byte gb = (byte)(255 - cookedValue / cookedLimit * 255);
-			spriteManager.SetTint(new Colour(255, gb, gb, 255));
+			byte gb = (byte)(colour.GetGreen() - cookedValue / cookedLimit * colour.GetGreen());
+			spriteManager.SetTint(new Colour(colour.GetRed(), gb, gb, 255));
 			if (cookedValue > cookedLimit)
 			{
 				Vector2 rot = Vector2.Right * featherExplosionSpeed;
@@ -102,9 +125,16 @@ namespace Project2D
 				dying = true;
 				drag = 3;
 			}
-			if (cookedValue > 0)
+			else if (cookedValue > 0)
 			{
 				cookedValue-= Game.deltaTime;
+				if (still)
+				{
+					spriteManager.SetLimits(1, 10);
+					spriteManager.PlayFrom(1);
+					still = false;
+					targetVelocity = Vector2.Zero;
+				}
 			}
 			else
 			{
@@ -146,7 +176,7 @@ namespace Project2D
 			}
 			else
 			{
-				if (delta.MagnitudeSquared() > (distanceToScare + runDist) * (distanceToScare + runDist))
+				if (delta.MagnitudeSquared() > (distanceToScare + runDist) * (distanceToScare + runDist) && cookedValue == 0)
 				{
 					targetVelocity = Vector2.Zero;
 					spriteManager.Pause();
@@ -173,7 +203,7 @@ namespace Project2D
 				for (int i = 0; i < rayNumber; i++)
 				{
 					ray = new Ray(collider.GetCentrePoint(), rayVector);
-					if (cM.RayCast(ray, out hit, CollisionLayer.Player, CollisionLayer.Enemy))
+					if (cM.RayCast(ray, out hit, rayLimit, CollisionLayer.Player, CollisionLayer.Enemy))
 					{
 						
 						if (hit.distanceAlongRay < avoidDistance)
@@ -209,6 +239,22 @@ namespace Project2D
 			velocity += deltaV;
 		}
 
+		public override void Draw()
+		{
+			base.Draw();
+
+			if (collider != null)
+			{
+				Vector2[] p = collider.GetGlobalPoints();
+
+				for (int i = 0; i < 3; i++)
+				{
+					DrawLineEx(p[i], p[i + 1], 3, RLColor.PURPLE);
+				}
+				DrawLineEx(p[3], p[0], 3, RLColor.PURPLE);
+			}
+		}
+
 		public bool IsDead
 		{
 			get
@@ -217,15 +263,16 @@ namespace Project2D
 			}
 		}
 
-		public void CancelSuck()
+		public void CancelSuck(float startY)
 		{
-
+			controlledByPlayer = false;
+			deathY = startY;
+			deathPercentDone = 0;
 		}
 
 		public override GameObject Clone()
 		{
-			Chicken c = new Chicken(TextureName.None, position, player);
-			c.SetSprite(spriteManager.Clone());
+			Chicken c = new Chicken(TextureName.Chicken, GlobalPosition, player, spriteManager.Clone());
 			c.SetSortingOffset(sortingOffset);
 			c.GetSprite().SetAttachedGameObject(c);
 			c.velocity = velocity;

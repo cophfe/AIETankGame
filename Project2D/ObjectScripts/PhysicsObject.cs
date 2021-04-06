@@ -39,7 +39,6 @@ namespace Project2D
 			this.drag = drag;
 			this.angularDrag = angularDrag;
 			this.density = density;
-
 			
 			if (collider != null)
 			{
@@ -155,7 +154,7 @@ namespace Project2D
 		public void AddImpulseAtPosition(Vector2 impulse, Vector2 position)
 		{
 			velocity += iMass * impulse;
-			angularVelocity += iInertia * (-1 * position).zCross(impulse);
+			angularVelocity += iInertia * (-1 * position).ZCross(impulse);
 		}
 
 		public override void Update()
@@ -182,7 +181,8 @@ namespace Project2D
 
 		public override GameObject Clone()
 		{
-			PhysicsObject p = new PhysicsObject(TextureName.None, GlobalPosition, GlobalScale.x, collider.Clone(), drag, angularDrag, restitution, GlobalRotation, parent, density, mass != 0, inertia != 0, isDrawn);
+			Collider c = collider == null ? null : collider.Clone();
+			PhysicsObject p = new PhysicsObject(TextureName.None, GlobalPosition, GlobalScale.x, c, drag, angularDrag, restitution, GlobalRotation, parent, density, mass != 0, inertia != 0, isDrawn);
 			p.SetSprite(spriteManager.Clone());
 			p.SetSortingOffset(sortingOffset);
 			p.GetSprite().SetAttachedGameObject(p);

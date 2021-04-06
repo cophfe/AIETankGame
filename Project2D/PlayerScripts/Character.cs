@@ -35,6 +35,10 @@ namespace Project2D
 
 		Sprite headSprite;
 
+		SmoothCamera camera;
+
+		Vector2 cameraPoint;
+
 		Vector2 headOffset = new Vector2(-3, -58);
 
 		float[] eyeOffset = new float[24]
@@ -53,7 +57,7 @@ namespace Project2D
 			AddChild(eye1);
 			AddChild(eye2);
 			//new Arm(armName, armOffset, armScale, 0, this);
-			spriteManager = new Sprite(Sprite.GetFramesFromFolder("Player"), 30, 1, 23, this);
+			spriteManager = new Sprite(Sprite.GetFramesFromFolder("Player"), 30, 1, 23, this, RLColor.WHITE);
 			spriteManager.Pause();
 			spriteManager.SetFrame(0);
 
@@ -61,7 +65,7 @@ namespace Project2D
 			headHolder.GetSprite().SetSort(0);
 
 			head = new GameObject(TextureName.Head, Vector2.Zero, 1, 0, headHolder);
-			headSprite = new Sprite(Sprite.GetFramesFromFolder("PlayerHead"), 30, 0, 9, head, true, 0);
+			headSprite = new Sprite(Sprite.GetFramesFromFolder("PlayerHead"), 30, 0, 9, head, RLColor.WHITE, true, 0);
 			head.SetSprite(headSprite);
 			headSprite.Pause();
 
@@ -72,15 +76,19 @@ namespace Project2D
 			chicken.GetSprite().SetSort(-1);
 			chicken.SetDrawn(false);
 
+			SortChildren();
+			headHolder.SortChildren();
+
 			LocalPosition = Vector2.One * 100;
 			collider.SetCollisionLayer(CollisionLayer.Player);
+			spriteManager.SetLayer(SpriteLayer.Midground);
 		}
 
 		Vector2 inputVelocity;
 		Vector2 inputDirection = Vector2.Zero;
 		bool charging = false;
 		bool cooling = false;
-		int chargeSpeed = 400;
+		int chargeSpeed = 10000;
 		RLColor eyeColor = RLColor.BLACK;
 		float buildUp = 0;
 		int chickenEatAmount = 0;
@@ -146,7 +154,7 @@ namespace Project2D
 					charging = false;
 					buildUp = 0;
 					eye1.SetLaser(true);
-					Game.camera.SetShakeAmount(5);
+					camera.SetShakeAmount(5);
 				}
 				else 
 					while (buildUp >= 1)
@@ -155,12 +163,12 @@ namespace Project2D
 					
 						buildUp = 0;
 						eye1.SetTint(eyeColor);
-						Game.camera.SetShakeAmount(eyeColor.r * 0.005f);
+						camera.SetShakeAmount(eyeColor.r * 0.005f);
 					}
 			}
 			if (cooling)
 			{
-				buildUp += Game.deltaTime * chargeSpeed;
+				buildUp += Game.deltaTime * chargeSpeed * 2;
 				if (eyeColor.r == 0)
 				{
 					cooling = false;
@@ -172,7 +180,7 @@ namespace Project2D
 						eyeColor.r--;
 						buildUp = 0;
 						eye1.SetTint(eyeColor);
-						Game.camera.SetShakeAmount(eyeColor.r * 0.005f);
+						camera.SetShakeAmount(eyeColor.r * 0.005f);
 					}
 			}
 			if (IsMouseButtonReleased(MouseButton.MOUSE_LEFT_BUTTON))
@@ -265,13 +273,23 @@ namespace Project2D
 			}
 			inputVelocity = velocityCap > accelerationCap * Game.deltaTime ? inputVelocity : cache + velocity;
 			AddVelocity(inputVelocity);
-
+			camera.Target(cameraPoint);
+			LineOfSight.SetOrigin(LocalPosition);
 			base.Update();
 		}
 
 		public override void Draw()
 		{
-			 base.Draw();
+			base.Draw();
+
+			Vector2[] p = collider.GetGlobalPoints();
+
+			
+			for (int i = 0; i < 3; i++)
+			{
+				DrawLineEx(p[i], p[i + 1], 3, RLColor.PURPLE);
+			}
+			DrawLineEx(p[3], p[0], 3, RLColor.PURPLE);
 		}
 
 		public void TieDeadChicken(Chicken chicken)
@@ -291,7 +309,7 @@ namespace Project2D
 				Vector2 delta;
 				for (int i = 0; i < suckedChickens.Count; i++)
 				{
-					amountThrough = (Game.currentTime - suckedChickens[i].timeAtStart) * 0.001f * chickenSuckSpeed;
+					amountThrough = (Game.currentTime - suckedChickens[i].timeAtStart) * 0.005f * chickenSuckSpeed;
 					delta = chicken.GlobalPosition - suckedChickens[i].positionAtStart;
 
 					//easing: https://easings.net/#easeInOutCubic
@@ -325,9 +343,24 @@ namespace Project2D
 		{
 			for (int i = 0; i < suckedChickens.Count; i++)
 			{
-				suckedChickens[i].chicken.CancelSuck();
+				suckedChickens[i].chicken.CancelSuck(suckedChickens[i].positionAtStart.y);
 			}
 			suckedChickens.Clear();
+		}
+
+		public Vector2 GetChickenPos()
+		{
+			return chicken.GlobalPosition;
+		}
+
+		public void SetTiedCamera(SmoothCamera camera)
+		{
+			this.camera = camera;
+		}
+
+		public SmoothCamera GetTiedCamera()
+		{
+			return camera;
 		}
 
 		class SuckedChickenInfo

@@ -78,46 +78,32 @@ namespace Project2D
 				Vector2 radiusA = (collisionPoints.points[i] - pair.a.GetCollider().GetCentrePoint());
 				Vector2 radiusB = (collisionPoints.points[i] - pair.b.GetCollider().GetCentrePoint());
 				
-				Vector2 rV = (pair.b.GetVelocity() + Vector2.zCross(pair.b.GetAngularVelocity(), radiusB)) - (pair.a.GetVelocity() + Vector2.zCross(-pair.a.GetAngularVelocity(), radiusA));
+				Vector2 rV = (pair.b.GetVelocity() + Vector2.ZCross(-pair.b.GetAngularVelocity(), radiusB)) - (pair.a.GetVelocity() + Vector2.ZCross(-pair.a.GetAngularVelocity(), radiusA));
 
 				//if (Vector2.Dot(pair.b.GetVelocity() - pair.a.GetVelocity(), normal) > 0)
 				//	return;
 				float projectedRV = Vector2.Dot(rV, normal);
 
-				float rACrossN = radiusA.zCross(normal);
-				float rBCrossN = radiusB.zCross(normal);
+				float rACrossN = radiusA.ZCross(normal);
+				float rBCrossN = radiusB.ZCross(normal);
 				
 				//impulse is spread evenly between collision points
 				float impulseMagnitude = (-(1 + Math.Min(pair.a.restitution, pair.b.restitution)) * projectedRV) / ((aIM + bIM + (rACrossN * rACrossN) * aII + (rBCrossN * rBCrossN) * bII) * collisionPoints.points.Count);
 				Vector2 impulse = normal * impulseMagnitude;
 				
-				//if (normal.Dot(pair.b.GetCollider().GetCentrePoint() - pair.a.GetCollider().GetCentrePoint()) < 0)
-				{
-					pair.a.AddImpulseAtPosition(-1 * impulse, radiusA);
-					pair.b.AddImpulseAtPosition(impulse, radiusB);
-
-				}
+				pair.a.AddImpulseAtPosition(-1 * impulse, radiusA);
+				pair.b.AddImpulseAtPosition(impulse, radiusB);
 			}
-			if (normal.Dot(pair.b.GetCollider().GetCentrePoint() - pair.a.GetCollider().GetCentrePoint()) > 0)
-			{
 				if (aIM != 0)
 					pair.a.AddPosition(normal * -penetration);
 				if (bIM != 0)
 					pair.b.AddPosition(normal * penetration);
-			}
-			else
-			{
-				if (aIM != 0)
-					pair.a.AddPosition(normal * penetration);
-				if (bIM != 0)
-					pair.b.AddPosition(normal * -penetration);
-			}
 		}
 
 		#region Ray Casting
 		static Matrix3 rotateClock = Matrix3.GetRotateZ(Trig.pi /2);
 		static Matrix3 rotateAntiClock = Matrix3.GetRotateZ(Trig.pi / -2);
-		public bool RayCast(Ray ray, out Hit hit, params CollisionLayer[] ignoredLayers)
+		public bool RayCast(Ray ray, out Hit hit, float magnitude = float.PositiveInfinity, params CollisionLayer[] ignoredLayers)
 		{
 			//this raycast was done using this algorithm 
 			//http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-custom-ray-obb-function/
@@ -130,7 +116,7 @@ namespace Project2D
 			for (int i = 0; i < objList.Count; i++)
 			{
 				Collider rect = objList[i].GetCollider();
-				if (ignoredLayers.Contains(rect.GetLayer()))
+				if (ignoredLayers.Contains(rect.GetLayer()) || (ray.position - rect.GetCentrePoint()).MagnitudeSquared() > magnitude * magnitude)
 					continue;
 
 				Vector2 relative = rect.GetCentrePoint() - ray.position;
@@ -366,7 +352,7 @@ namespace Project2D
 					smallest = new Vector2(aABB.centre.x - w, aABB.centre.y + h) - ray.position;
 				}
 
-				if (!(biggest.zCross(ray.direction) * biggest.zCross(smallest) >= 0 && smallest.zCross(ray.direction) * smallest.zCross(biggest) >= 0))
+				if (!(biggest.ZCross(ray.direction) * biggest.ZCross(smallest) >= 0 && smallest.ZCross(ray.direction) * smallest.ZCross(biggest) >= 0))
 				{
 					continue;
 				}
@@ -483,7 +469,7 @@ namespace Project2D
 				return;
 			}
 
-			Vector2 refNorm = Vector2.zCross(refV, -1);
+			Vector2 refNorm = Vector2.ZCross(refV, -1);
 
 			float max = refNorm.Dot(reference.max);
 

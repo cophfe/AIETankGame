@@ -35,8 +35,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mlib">
-      <HintPath>..\..\MLib\MathLibrary\bin\Release\netstandard2.0\Mlib.dll</HintPath>
+    <Reference Include="Mlib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\MathLibrary\MathLibrary\bin\Release\netstandard2.0\Mlib.dll</HintPath>
     </Reference>
     <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
     <Reference Include="System" />
@@ -57,6 +58,7 @@
     <Compile Include="ObjectScripts\Button.cs" />
     <Compile Include="ObjectScripts\Chicken.cs" />
     <Compile Include="ObjectScripts\Feather.cs" />
+    <Compile Include="ObjectScripts\Smoke.cs" />
     <Compile Include="PlayerScripts\Arm.cs" />
     <Compile Include="ObjectScripts\SmoothCamera.cs" />
     <Compile Include="CollisionScripts\CollisionManager.cs" />

@@ -100,11 +100,11 @@ namespace Project2D
 			//(because inertia is not usually computed like this and this is probably technically wrong)
 			Vector2 a = centrePoint + new Vector2( -halfWidth, halfHeight);
 			Vector2 b = centrePoint + new Vector2( halfWidth, - halfHeight);
-			float triMass = connected.density * 0.5f * Math.Abs(a.zCross(b));
+			float triMass = connected.density * 0.5f * Math.Abs(a.ZCross(b));
 			inert = triMass * (a.MagnitudeSquared() + b.MagnitudeSquared() + a.Dot(b)) / 6;
 			a = centrePoint + new Vector2(-halfWidth, -halfHeight);
 			b = centrePoint + new Vector2(-halfWidth, halfHeight);
-			triMass = connected.density * 0.5f * Math.Abs(a.zCross(b));
+			triMass = connected.density * 0.5f * Math.Abs(a.ZCross(b));
 			inert += triMass * (a.MagnitudeSquared() + b.MagnitudeSquared() + a.Dot(b)) / 6;
 			inertia = 2 * inert;
 		}

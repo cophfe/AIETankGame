@@ -32,8 +32,8 @@ namespace Project2D
 			LineOfSight.SetIgnored(ignoredLineOfSight);
 			GameObject vignette = new GameObject(TextureName.Vignette);
 			AddChild(vignette);
-			vignette.LocalScale = new Vector2(Game.screenWidth, Game.screenHeight) / 1000;
-			sortingOffset = 1000;
+			vignette.GetSprite().SetLayer(SpriteLayer.Foreground);
+			vignette.LocalScale = new Vector2(Game.screenWidth, Game.screenHeight) / (1000 * zoom);
 			LineOfSight.SetMaxDist(new Vector2(Game.screenWidth/2, Game.screenHeight/ 2).Magnitude() + smoothMultiplier * 15);
 			parent.SetCamera(this);
 			LineOfSight.Initiate(parent);
@@ -67,7 +67,6 @@ namespace Project2D
 			{
 				//(target should be inside objects collisionBox)
 				target.y += 59;
-				LineOfSight.SetOrigin(target);
 				LineOfSight.Update();
 			}
 		}
@@ -77,10 +76,14 @@ namespace Project2D
 			if (on)
 			{
 				BeginMode2D(camera);
-				if (lineOfSight)
-					LineOfSight.Draw();
 			}
 			
+		}
+
+		public void DrawLineOfSight()
+		{
+			if (lineOfSight)
+				LineOfSight.Draw();
 		}
 
 		public void Target(GameObject obj)
@@ -112,7 +115,16 @@ namespace Project2D
 
 		public void EndCamera()
 		{
+			for (int i = 0; i < children.Count; i++)
+			{
+				children[0].Draw();
+			}
 			EndMode2D();
+		}
+
+		public override void Draw()
+		{
+
 		}
 	}
 }
