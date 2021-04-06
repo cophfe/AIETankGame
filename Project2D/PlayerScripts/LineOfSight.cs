@@ -18,7 +18,7 @@ namespace Project2D
 		static RLVector2[] points = new RLVector2[0];
 		static Matrix3 offset = Matrix3.GetRotateZ(0.0001f);
 		static Matrix3 offsetBack = Matrix3.GetRotateZ(-0.0001f);
-		static float rayLimit = 1000;
+		static float rayLimit = 2000;
 		static float centreDistLimit = rayLimit;
 		static Colour darkTint = new Colour(255, 255, 255, 50);
 		static CollisionManager cM;
@@ -130,7 +130,11 @@ namespace Project2D
 
 		static void UpdateTexture()
 		{
-			points = points.OrderBy(p => -Math.Atan2(p.y - origin.y, p.x - origin.x)).ToArray();
+			//for math.atan2 when both variables are zero, it returns the wrong thing. so it is removed.
+			points = points.Where(p => p.y != origin.y || p.x != origin.x).OrderBy(p => -Math.Atan2(p.y - origin.y, p.x - origin.x)).ToArray();
+
+			//points = points.OrderBy(p => p.y == origin.y && p.x == origin.x ? -Trig.pi : -Math.Atan2(p.y - origin.y, p.x - origin.x)).ToArray();
+			//points = points.OrderBy(p => -Math.Atan2(p.y - origin.y, p.x - origin.x)).ToArray();
 
 			RLVector2[] plusOrigin = new RLVector2[points.Length + 2];
 			for (int i = 0; i < points.Length; i++)

@@ -224,9 +224,7 @@ namespace Project2D
 	{
 		None,
 		Bale,
-		Arm,
 		Player,
-		Grid,
 		Pupil,
 		Vignette,
 		Button,
@@ -237,6 +235,8 @@ namespace Project2D
 		HeadFix,
 		CookedChicken,
 		Wall,
-		SideWall
+		SideWall,
+		Xray,
+		GooBird
 	}
 }

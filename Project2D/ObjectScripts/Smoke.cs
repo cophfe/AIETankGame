@@ -14,26 +14,32 @@ namespace Project2D
 		Vector2 target;
 		Vector2 startPosition;
 		float speed;
+		GameObject targetObject;
+		float existanceTimer = 0;
+		Vector2 offset = new Vector2(30, 24);
+		Vector2 randomnessVector;
 
 
-		public Smoke(Vector2 position, float rotation, float scale, float suckSpeed, Vector2 towardsPos, float angularVelocity, GameObject parent) : base(TextureName.Pupil, position, scale, null, 1f, 0.5f, 0, rotation, parent)
+		public Smoke(Vector2 position, float rotation, float scale, float suckSpeed, GameObject targetObj, Vector2 randomVector, float angularVelocity, GameObject parent) : base(TextureName.Pupil, position, scale, null, 1f, 0.5f, 0, rotation, parent)
 		{
 			AddAngularVelocity(angularVelocity);
 			
 			spriteManager.SetLayer(SpriteLayer.Background);
 
-			target = towardsPos + offset;
+			target = targetObj.GlobalPosition + offset + randomVector;
+			targetObject = targetObj;
 			speed = suckSpeed;
 			startPosition = position;
-			spriteManager.SetTint(RLColor.GRAY);
+			randomnessVector = randomVector;
+			spriteManager.SetTint(RLColor.DARKGRAY);
 		}
 
-		float existanceTimer = 0;
-		bool done = false;
-		Vector2 offset = new Vector2(-10,20);
+		
 
 		public override void Update()
 		{
+			offset.x = Math.Abs(offset.x) * -Math.Sign(targetObject.LocalPosition.x);
+			target = targetObject.GlobalPosition + offset + randomnessVector;
 			if (existanceTimer >= 0.5f)
 			{
 				scale -= new Vector2(Game.deltaTime, Game.deltaTime) * 0.5f;
@@ -44,7 +50,7 @@ namespace Project2D
 			}
 			if (existanceTimer < 1)
 			{
-				position = Vector2.Lerp(startPosition, target, existanceTimer * existanceTimer * existanceTimer);
+				position = Vector2.Lerp(startPosition, target, existanceTimer * existanceTimer);
 			}
 			existanceTimer += Game.deltaTime * speed;
 

@@ -38,6 +38,7 @@ namespace Project2D
 		Vector2 targetVelocity = Vector2.Zero;
 		static Matrix3 rayRotationMatrix = Matrix3.GetRotateZ(Trig.pi * 2 / rayNumber);
 		static Matrix3 explosionRotationMatrix = Matrix3.GetRotateZ(Trig.pi * 2 / featherExplosionNumber);
+		static Texture2D[] frames = Sprite.GetFramesFromFolder("Chicken");
 
 		float deathPercentDone = 0;
 		
@@ -46,7 +47,7 @@ namespace Project2D
 			if (loadedSprite != null)
 				spriteManager = loadedSprite;
 			else
-				spriteManager = new Sprite(Sprite.GetFramesFromFolder("Chicken"), 24, 1, 11, this, colour);
+				spriteManager = new Sprite(frames, 24, 1, 11, this, colour);
 
 			spriteManager.SetFrame(0);
 			spriteManager.Pause();
@@ -68,7 +69,7 @@ namespace Project2D
 					}
 					else
 					{
-						deathPercentDone += Game.deltaTime * 40;
+						deathPercentDone += Game.deltaTime * 240;
 						if (deathPercentDone >= 100)
 						{
 							rotation = 0;
@@ -79,8 +80,7 @@ namespace Project2D
 						{
 							rotation = (float)Math.Sin(Game.currentTime / (200 - deathPercentDone * 0.5f)) * deathPercentDone * 0.001f;
 						}
-						
-						new Smoke(LocalPosition + new Vector2((float)rand.NextDouble() * 50 - 25, (float)rand.NextDouble() * 50 - 10), 0, (float)rand.NextDouble() * 0.15f, 5, player.GetChickenPos() + new Vector2((float)rand.NextDouble() * 20 - 10, (float)rand.NextDouble() * 20 - 10), 0, Game.GetCurrentScene());
+						new Smoke(LocalPosition + new Vector2((float)rand.NextDouble() * 50 - 25, (float)rand.NextDouble() * 30 + 10), 0, (float)rand.NextDouble() * 0.15f, 5, player.GetChicken(), new Vector2((float)rand.NextDouble() * 20 - 10, (float)rand.NextDouble() * 20 - 10), 0, Game.GetCurrentScene());
 					}
 				}
 				else if (falling)
@@ -103,6 +103,7 @@ namespace Project2D
 					spriteManager.Pause();
 					dead = true;
 					RemoveCollider(Game.GetCurrentScene());
+					player.chickensBeingSucked = true;
 				}
 				return;
 			}
@@ -124,6 +125,7 @@ namespace Project2D
 				spriteManager.SetSpeed(40);
 				dying = true;
 				drag = 3;
+				return;
 			}
 			else if (cookedValue > 0)
 			{
@@ -268,6 +270,7 @@ namespace Project2D
 			controlledByPlayer = false;
 			deathY = startY;
 			deathPercentDone = 0;
+			falling = true;
 		}
 
 		public override GameObject Clone()
@@ -279,6 +282,11 @@ namespace Project2D
 			c.angularVelocity = angularVelocity;
 			c.force = force;
 			return c;
+		}
+
+		public static Texture2D[] GetFrames()
+		{
+			return frames;
 		}
 	}
 }

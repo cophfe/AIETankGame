@@ -20,7 +20,7 @@ namespace Project2D
 		bool lineOfSight = true;
 		private Vector2 globalPosition;
 		GameObject targetObject = null;
-		Random rand = new Random();
+		Random rand = new Random(); 
 		Vector2 shake = Vector2.Zero;
 		float shakeAmount;
 
@@ -33,7 +33,7 @@ namespace Project2D
 			GameObject vignette = new GameObject(TextureName.Vignette);
 			AddChild(vignette);
 			vignette.GetSprite().SetLayer(SpriteLayer.Foreground);
-			vignette.LocalScale = new Vector2(Game.screenWidth, Game.screenHeight) / (1000 * zoom);
+			vignette.LocalScale = new Vector2(Game.screenWidth, Game.screenHeight) / (1150);
 			LineOfSight.SetMaxDist(new Vector2(Game.screenWidth/2, Game.screenHeight/ 2).Magnitude() + smoothMultiplier * 15);
 			parent.SetCamera(this);
 			LineOfSight.Initiate(parent);

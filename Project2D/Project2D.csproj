@@ -58,6 +58,8 @@
     <Compile Include="ObjectScripts\Button.cs" />
     <Compile Include="ObjectScripts\Chicken.cs" />
     <Compile Include="ObjectScripts\Feather.cs" />
+    <Compile Include="ObjectScripts\HungerHolder.cs" />
+    <Compile Include="ObjectScripts\PhysicsChicken.cs" />
     <Compile Include="ObjectScripts\Smoke.cs" />
     <Compile Include="PlayerScripts\Arm.cs" />
     <Compile Include="ObjectScripts\SmoothCamera.cs" />

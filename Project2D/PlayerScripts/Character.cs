@@ -37,8 +37,6 @@ namespace Project2D
 
 		SmoothCamera camera;
 
-		Vector2 cameraPoint;
-
 		Vector2 headOffset = new Vector2(-3, -58);
 
 		float[] eyeOffset = new float[24]
@@ -82,16 +80,24 @@ namespace Project2D
 			LocalPosition = Vector2.One * 100;
 			collider.SetCollisionLayer(CollisionLayer.Player);
 			spriteManager.SetLayer(SpriteLayer.Midground);
+
+			h = new HungerHolder(TextureName.Xray, 200, 300, new Vector2(Game.screenWidth - 100, 130), 1, null);
+			Game.GetCurrentScene().AddUIElement(h);
+			
 		}
 
+		HungerHolder h;
 		Vector2 inputVelocity;
 		Vector2 inputDirection = Vector2.Zero;
 		bool charging = false;
 		bool cooling = false;
-		int chargeSpeed = 10000;
+		int chargeSpeed = 500;
 		RLColor eyeColor = RLColor.BLACK;
 		float buildUp = 0;
 		int chickenEatAmount = 0;
+		public bool chickensBeingSucked = false;
+		public int chickenTotalInScene = 0;
+		public int chickensEatenTotal = 0;
 
 		public override void Update()
 		{
@@ -149,39 +155,42 @@ namespace Project2D
 			if (charging)
 			{
 				buildUp += Game.deltaTime * chargeSpeed;
-				if (eyeColor.r == 255)
+
+				while (buildUp >= 1)
 				{
-					charging = false;
-					buildUp = 0;
-					eye1.SetLaser(true);
-					camera.SetShakeAmount(5);
-				}
-				else 
-					while (buildUp >= 1)
+					if (eyeColor.r >= 255)
 					{
-						eyeColor.r++;
-					
+						eyeColor.r = 255;
+						charging = false;
 						buildUp = 0;
-						eye1.SetTint(eyeColor);
-						camera.SetShakeAmount(eyeColor.r * 0.005f);
+						eye1.SetLaser(true);
+						camera.SetShakeAmount(5);
+						return;
 					}
+					eyeColor.r++;
+					buildUp--;
+					eye1.SetTint(eyeColor);
+					camera.SetShakeAmount(eyeColor.r * 0.005f);
+				}
 			}
 			if (cooling)
 			{
 				buildUp += Game.deltaTime * chargeSpeed * 2;
-				if (eyeColor.r == 0)
+
+				while (buildUp >= 1)
 				{
-					cooling = false;
-					buildUp = 0;
-				}
-				else 
-					while (buildUp >= 1)
+					if (eyeColor.r == 0)
 					{
-						eyeColor.r--;
+						cooling = false;
 						buildUp = 0;
-						eye1.SetTint(eyeColor);
-						camera.SetShakeAmount(eyeColor.r * 0.005f);
+						return;
 					}
+
+					eyeColor.r--;
+					buildUp--;
+					eye1.SetTint(eyeColor);
+					camera.SetShakeAmount(eyeColor.r * 0.005f);
+				}
 			}
 			if (IsMouseButtonReleased(MouseButton.MOUSE_LEFT_BUTTON))
 			{
@@ -204,6 +213,29 @@ namespace Project2D
 			{
 				int fr = headSprite.CurrentFrame();
 				UpdateTiedChickens();
+				
+				if (chickensBeingSucked)
+				{
+					if (fr > 5)
+						camera.SetShakeAmount( 0.8f * (5 - fr % 5));
+					else
+						camera.SetShakeAmount(0.8f * (fr));
+				}
+				
+				if (chickensEatenTotal > 0 && IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON) && fr == 5)
+				{
+					Vector2 direction = (camera.GetMouseWorldPosition() - chicken.GlobalPosition).Normalised() * 500;
+					new PhysicsChicken(chicken.GlobalPosition, direction, 0.1f, 3);
+					Vector2 rot = direction.Rotated(-Trig.pi/4);
+					for (int i = 0; i < 15; i++)
+					{
+						new Feather(position, (float)Game.globalRand.NextDouble() * Trig.pi * 2 - Trig.pi, (float)Game.globalRand.NextDouble() * 0.2f + 0.1f, rot, (float)Game.globalRand.NextDouble() - 0.5f, Game.GetCurrentScene());
+						rot.Rotate(Trig.pi * 0.0335f);
+					}
+					chickensEatenTotal--;
+					chickenTotalInScene++;
+					h.hungerPercent -= (float)1 / chickenTotalInScene;
+				}
 				if (endingBite)
 				{
 					if (fr <= 0)
@@ -212,7 +244,9 @@ namespace Project2D
 						headSprite.SetBackwards(false);
 						biting = false;
 						endingBite = false;
+						chickensBeingSucked = false;
 						broadcastingHunger = false;
+						camera.SetShakeAmount(0);
 					}
 
 					if (fr >= 10)
@@ -221,17 +255,28 @@ namespace Project2D
 						headSprite.SetFrame(0);
 						endingBite = false;
 						biting = false;
+						chickensBeingSucked = false;
 						broadcastingHunger = false;
-						if (chicken.GetDrawn())
+						camera.SetShakeAmount(0);
+						h.hungerPercent += (float)chickenEatAmount / chickenTotalInScene;
+						chickensEatenTotal += chickenEatAmount;
+						if (h.hungerPercent >= 1)
 						{
-							chicken.SetDrawn(false);
+							Console.WriteLine("YOU GOT EM!!");
 						}
+						chickenEatAmount = 0;
+						chicken.SetDrawn(false);					
+					}
+					else if (fr > 6)
+					{
+						camera.SetShakeAmount(6);
 					}
 				}
 				else if (fr == 5)
 				{
 					headSprite.Pause();
 				}
+				
 			}
 			if (IsMouseButtonReleased(MouseButton.MOUSE_RIGHT_BUTTON) && !endingBite)
 			{
@@ -263,7 +308,6 @@ namespace Project2D
 			eye1.SetOffsetY(offset + headEyeOffset[headSprite.CurrentFrame()]);
 			headHolder.LocalPosition = new Vector2(headHolder.LocalPosition.x, offset + headOffset.y);
 			
-			//make it so this can't overshoot wanted value (inputdirection.normalized * velocityCap)
 			Vector2 cache = inputDirection.Normalised() * velocityCap - velocity;
 			if (cache.MagnitudeSquared() > accelerationCap * Game.deltaTime * accelerationCap * Game.deltaTime)
 				inputVelocity = cache.Normalised() * (accelerationCap * Game.deltaTime);
@@ -273,10 +317,11 @@ namespace Project2D
 			}
 			inputVelocity = velocityCap > accelerationCap * Game.deltaTime ? inputVelocity : cache + velocity;
 			AddVelocity(inputVelocity);
-			camera.Target(cameraPoint);
-			LineOfSight.SetOrigin(LocalPosition);
+			LineOfSight.SetOrigin(LocalPosition + lOSOffset);
 			base.Update();
 		}
+
+		Vector2 lOSOffset = new Vector2(0, 50);
 
 		public override void Draw()
 		{
@@ -351,6 +396,11 @@ namespace Project2D
 		public Vector2 GetChickenPos()
 		{
 			return chicken.GlobalPosition;
+		}
+
+		public GameObject GetChicken()
+		{
+			return chicken;
 		}
 
 		public void SetTiedCamera(SmoothCamera camera)

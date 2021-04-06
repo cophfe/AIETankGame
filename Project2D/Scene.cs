@@ -14,7 +14,7 @@ namespace Project2D
 		protected List<GameObject> UI = new List<GameObject>();
 		protected SmoothCamera camera = new SmoothCamera();
 		protected CollisionManager cM = new CollisionManager();
-		public RLColor backgroundColor = new RLColor { a = 0xFF, r = 0x91, g = 0x51, b = 0x1d };
+		public RLColor backgroundColor = new RLColor { a = 0xFF, r = 0x94, g = 0x7d, b = 0x31 };
 
 		public Scene(List<GameObject> gameObjects, List<GameObject> UI = null)
 		{

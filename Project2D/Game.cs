@@ -33,13 +33,14 @@ namespace Project2D
         static int currentScene = 0;
 
         public static SmoothCamera camera;
+        public static Random globalRand = new Random();
 
         public Game()
         {
             
         }
 
-        Character player;
+        static Character player;
 
         public void Init()
         {
@@ -59,9 +60,7 @@ namespace Project2D
             {
                 LoadTexture("../Images/missing.png"),
                 LoadTexture("../Images/bale.png"),
-                LoadTexture("../Images/arm.png"),
                 LoadTexture("../Images/Player/astanding.png"),
-                LoadTexture("../Images/grid.jpg"),
                 LoadTexture("../Images/pupil.png"),
                 LoadTexture("../Images/vignette.png"),
                 LoadTexture("../Images/PlayButton/button.png"),
@@ -73,6 +72,8 @@ namespace Project2D
                 LoadTexture("../Images/Chicken/zcooked16.png"),
                 LoadTexture("../Images/wall.png"),
                 LoadTexture("../Images/sideWall.png"),
+                LoadTexture("../Images/xray.png"),
+                LoadTexture("../Images/gooBird.png"),
             };
 
             Scene startMenu = new Scene();
@@ -124,15 +125,15 @@ namespace Project2D
             scenes.Add(s);
             currentScene++;
             player = new Character(TextureName.Player, new Vector2(250, 250), 0.3f, 0, null, new Collider(-40, 45, 80, 60));
-            MapFromImage.MakeSceneFromImage(new PhysicsObject(TextureName.Wall, Vector2.One * 300, 1f, new Collider(-135.5f, -92f, 271f, 271f), 1f, 1, 3f, 0, null, 1, false),//new Collider(-135.5f, -92f, 271f, 271f)
+            MapFromImage.MakeSceneFromImage(new PhysicsObject(TextureName.Wall, Vector2.One * 300, 1f, null, 1f, 1, 3f, 0, null, 1, false),//new Collider(-135.5f, -92f, 271f, 271f)
                 new PhysicsObject(TextureName.Bale, Vector2.Zero, 0.7f, Collider.FromTextureName(TextureName.Bale), 3f, 3, 0f, 0, null, 0.7f, true),
                 player,
                 new Chicken(TextureName.Chicken, Vector2.Zero, player),
-                "../Images/map.png", s);
+                "../Images/map3.png", s, true);
             camera = new SmoothCamera(scenes[1], player.GlobalPosition, 0, 1f, new Vector2(0, 0), true, CollisionLayer.Player, CollisionLayer.Enemy);
             player.SetTiedCamera(camera);
             camera.LocalPosition = player.LocalPosition;
-
+            
             currentScene = 0;
         }
         public void Shutdown()
@@ -179,6 +180,11 @@ namespace Project2D
 		{
             return scenes[currentScene];
         }
+
+        public static Character GetPlayer()
+		{
+            return player;
+		}
     }
     
     
