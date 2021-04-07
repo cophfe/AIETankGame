@@ -111,6 +111,7 @@ namespace Project2D
 
 			bool collided = false;
 			float distance = float.PositiveInfinity;
+			float secondaryDistance = float.PositiveInfinity;
 			PhysicsObject colliderHit = null;
 			
 			for (int i = 0; i < objList.Count; i++)
@@ -209,12 +210,13 @@ namespace Project2D
 				collided = true;
 				if (minTotalDistance < distance)
 				{
+					secondaryDistance = distance;
 					distance = minTotalDistance;
 					colliderHit = objList[i];
 				}
 			}
 
-			hit = new Hit(distance, colliderHit);
+			hit = new Hit(distance, colliderHit, secondaryDistance);
 			if (collided)
 			{
 				return true;

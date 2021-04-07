@@ -218,11 +218,13 @@ namespace Project2D
 	{
 		public float distanceAlongRay;
 		public PhysicsObject objectHit;
+		public float secondaryDistanceHit;
 
-		public Hit(float distanceAlongRay, PhysicsObject colliderHit)
+		public Hit(float distanceAlongRay, PhysicsObject colliderHit, float secondDist = float.PositiveInfinity)
 		{
 			this.distanceAlongRay = distanceAlongRay;
 			this.objectHit = colliderHit;
+			secondaryDistanceHit = secondDist;
 		}
 	}
 

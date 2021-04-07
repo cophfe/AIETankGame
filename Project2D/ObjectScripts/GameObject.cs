@@ -166,6 +166,7 @@ namespace Project2D
 		public void SetSprite(Sprite sprite) 
 		{
 			spriteManager = sprite;
+			sprite.SetAttachedGameObject(this);
 		}
 
 		public float GetSortingOffset()

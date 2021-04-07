@@ -122,7 +122,7 @@ namespace Project2D
 				spriteManager.PlayFrom(35);
 				spriteManager.SetLimits(35, 51);
 				spriteManager.SetTint(RLColor.WHITE);
-				spriteManager.SetSpeed(40);
+				spriteManager.SetSpeed(10);
 				dying = true;
 				drag = 3;
 				return;
@@ -239,22 +239,6 @@ namespace Project2D
 			}
 			deltaV = targetVelocity.MagnitudeSquared() > (accelerationCap * Game.deltaTime) * (accelerationCap * Game.deltaTime) ? deltaV : cache;
 			velocity += deltaV;
-		}
-
-		public override void Draw()
-		{
-			base.Draw();
-
-			if (collider != null)
-			{
-				Vector2[] p = collider.GetGlobalPoints();
-
-				for (int i = 0; i < 3; i++)
-				{
-					DrawLineEx(p[i], p[i + 1], 3, RLColor.PURPLE);
-				}
-				DrawLineEx(p[3], p[0], 3, RLColor.PURPLE);
-			}
 		}
 
 		public bool IsDead

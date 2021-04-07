@@ -16,7 +16,7 @@ namespace Project2D
 
         public static long currentTime = 0;
         private long lastTime = 0;
-        private float timer = 0;
+        public static float timer = 0;
         public static int fps = 1;
         private int frames;
         public bool pause = false;
@@ -126,7 +126,7 @@ namespace Project2D
             currentScene++;
             player = new Character(TextureName.Player, new Vector2(250, 250), 0.3f, 0, null, new Collider(-40, 45, 80, 60));
             MapFromImage.MakeSceneFromImage(new PhysicsObject(TextureName.Wall, Vector2.One * 300, 1f, null, 1f, 1, 3f, 0, null, 1, false),//new Collider(-135.5f, -92f, 271f, 271f)
-                new PhysicsObject(TextureName.Bale, Vector2.Zero, 0.7f, Collider.FromTextureName(TextureName.Bale), 3f, 3, 0f, 0, null, 0.7f, true),
+                new PhysicsObject(TextureName.Bale, Vector2.Zero, 0.7f, Collider.FromTextureName(TextureName.Bale), 2f, 3, 0.7f, 0, null, 3f, true),
                 player,
                 new Chicken(TextureName.Chicken, Vector2.Zero, player),
                 "../Images/map3.png", s, true);
@@ -159,8 +159,8 @@ namespace Project2D
                 return;
 
             //Update game objects here
-            scenes[currentScene].Update();
             scenes[currentScene].UpdateTransforms();
+            scenes[currentScene].Update();
             scenes[currentScene].UpdateCollisions();
         }
 

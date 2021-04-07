@@ -16,9 +16,9 @@ namespace Project2D
 		static Color chickenColor = Color.FromArgb(255,255,255);
 		static Color playerColor = Color.FromArgb(255,0,0);
 		static Color baleColor = Color.FromArgb(255,255,0);
-		static Color sideWallColor = Color.FromArgb(0,0,255);
-		static Vector2[,] collisionMap = new Vector2[12,2] { { new Vector2(9, 0.5f), new Vector2(16, 1) }, { new Vector2(4, 6.5f), new Vector2(8, 1) }, { new Vector2(12, 9.5f), new Vector2(10, 1) }, { new Vector2(4, 11.5f), new Vector2(8, 1) }, { new Vector2(12, 14.5f), new Vector2(10, 1) },
-		 { new Vector2(1.5f, 3.5f), new Vector2(0, 6) }, { new Vector2(10.5f, 4), new Vector2(1, 6) }, { new Vector2(16.5f, 5), new Vector2(1, 16) }, { new Vector2(16.5f, 12.5f), new Vector2(1, 7) }, { new Vector2(9, 0.5f ), new Vector2(1, 4) }, { new Vector2(7.5f, 7.5f), new Vector2(1, 1) }, { new Vector2(7.5f, 13), new Vector2(1, 2) },};
+		static Color sideWallColor = Color.FromArgb(0,0,255); //some pos are off by one
+		static Vector2[,] collisionMap = new Vector2[12,2] { { new Vector2(9f, 0.5f), new Vector2(14, 1) }, { new Vector2(4, 6.5f), new Vector2(6, 1) }, { new Vector2(12, 9.5f), new Vector2(8, 1) }, { new Vector2(4, 11.5f), new Vector2(6, 1) }, { new Vector2(12, 14.5f), new Vector2(8, 1) },
+		 { new Vector2(1.5f, 3.5f), new Vector2(1, 6) }, { new Vector2(10.5f, 4), new Vector2(1, 6) }, { new Vector2(16.5f, 5), new Vector2(1, 16) }, { new Vector2(16.5f, 12.5f), new Vector2(1, 7) }, { new Vector2(0.5f, 9f ), new Vector2(1, 4) }, { new Vector2(7.5f, 7.5f), new Vector2(1, 1) }, { new Vector2(7.5f, 13), new Vector2(1, 2) },};
 
 		public static void MakeSceneFromImage(PhysicsObject wallTemplate, PhysicsObject baleTemplate, Character player, PhysicsObject chickenTemplate, string map, Scene s, bool useCollisionMap = false)
 		{
@@ -26,7 +26,7 @@ namespace Project2D
 			{
 				for (int i = 0; i < collisionMap.GetLength(0); i++)
 				{
-					new PhysicsObject(TextureName.None, collisionMap[i, 0] * 271 + Vector2.One * -135.5f, 1, new Collider(Vector2.Zero, collisionMap[i, 1].x * 271, collisionMap[i, 1].y * 271), restitution: 1, parent: s, isDynamic: false, isDrawn: false);
+					new PhysicsObject(TextureName.None, collisionMap[i, 0] * 271 + new Vector2(-135.5f, -94f), 1, new Collider(Vector2.Zero, collisionMap[i, 1].x * 271, collisionMap[i, 1].y * 271), restitution: 1, parent: s, isDynamic: false, isDrawn: false);
 				}
 			}
 			int chickenTotal = 0;
