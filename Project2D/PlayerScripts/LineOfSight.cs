@@ -9,6 +9,9 @@ using Mlib;
 
 namespace Project2D
 {
+	/// <summary>
+	/// The line of sight limiter (attatched to a smoothcamera)
+	/// </summary>
 	static class LineOfSight
 	{
 		static CollisionLayer[] ignoredLayers = new CollisionLayer[0];
@@ -67,6 +70,7 @@ namespace Project2D
 					ray = new Ray(origin, offset * (objectPoints[j] - origin).Normalised());
 					if (cM.RayCast(ray, out hit, centreDistLimit, ignoredLayers))
 					{
+						//hit.objectHit.SetTint(RLColor.WHITE);
 						points[i * 12 + 3 * j + 1] = ray.direction * hit.distanceAlongRay + ray.position;
 					}
 					else
@@ -157,23 +161,23 @@ namespace Project2D
 			EndBlendMode();
 
 			//Some useful visualization if needed:
-
-			if (points.Length > 0)
-			{
-				foreach (var p in points)
-				{
-					if (p != Vector2.Zero)
-					{
-						DrawCircle((int)p.x, (int)p.y, 4, RLColor.RED);
-						DrawLineEx(origin, p, 2, RLColor.RED);
-					}
-				}
-				for (int i = 0; i < points.Length - 1; i++)
-				{
-					DrawLineEx(points[i], points[i + 1], 4, RLColor.ORANGE);
-				}
-				DrawLineEx(points[points.Length - 1], points[0], 4, RLColor.BLUE);
-			}
+			
+			//if (points.Length > 0)
+			//{
+			//	foreach (var p in points)
+			//	{
+			//		if (p != Vector2.Zero)
+			//		{
+			//			DrawCircle((int)p.x, (int)p.y, 4, RLColor.RED);
+			//			DrawLineEx(origin, p, 2, RLColor.RED);
+			//		}
+			//	}
+			//	for (int i = 0; i < points.Length - 1; i++)
+			//	{
+			//		DrawLineEx(points[i], points[i + 1], 4, RLColor.ORANGE);
+			//	}
+			//	DrawLineEx(points[points.Length - 1], points[0], 4, RLColor.BLUE);
+			//}
 		}
 
 		public static void SetOrigin(Vector2 point)

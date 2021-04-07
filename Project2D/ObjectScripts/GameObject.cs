@@ -9,6 +9,9 @@ using static Raylib.Raylib;
 
 namespace Project2D
 {
+	/// <summary>
+	/// The most basic object type
+	/// </summary>
 	class GameObject
 	{
 		#region Variables

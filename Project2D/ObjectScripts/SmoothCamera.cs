@@ -9,7 +9,9 @@ using static Raylib.Raylib;
 
 namespace Project2D
 {
-
+	/// <summary>
+	/// A manager for Raylib's camera system
+	/// </summary>
 	class SmoothCamera : GameObject
 	{
 		Camera2D camera;

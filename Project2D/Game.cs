@@ -40,7 +40,7 @@ namespace Project2D
             
         }
 
-        static Character player;
+        static Player player;
 
         public void Init()
         {
@@ -99,7 +99,7 @@ namespace Project2D
                 }
                 if (IsMouseButtonReleased(MouseButton.MOUSE_LEFT_BUTTON))
                 {
-                    if (playButton.GetSprite().CurrentFrame() == 1)
+                    if (playButton.GetSprite().GetCurrentFrame() == 1)
                         currentScene++;
                 }
             });
@@ -124,7 +124,7 @@ namespace Project2D
             Scene s = new Scene();
             scenes.Add(s);
             currentScene++;
-            player = new Character(TextureName.Player, new Vector2(250, 250), 0.3f, 0, null, new Collider(-40, 45, 80, 60));
+            player = new Player(TextureName.Player, new Vector2(250, 250), 0.3f, 0, null, new Collider(-40, 45, 80, 60));
             MapFromImage.MakeSceneFromImage(new PhysicsObject(TextureName.Wall, Vector2.One * 300, 1f, null, 1f, 1, 3f, 0, null, 1, false),//new Collider(-135.5f, -92f, 271f, 271f)
                 new PhysicsObject(TextureName.Bale, Vector2.Zero, 0.7f, Collider.FromTextureName(TextureName.Bale), 2f, 3, 0.7f, 0, null, 3f, true),
                 player,
@@ -159,8 +159,8 @@ namespace Project2D
                 return;
 
             //Update game objects here
-            scenes[currentScene].UpdateTransforms();
             scenes[currentScene].Update();
+            scenes[currentScene].UpdateTransforms();
             scenes[currentScene].UpdateCollisions();
         }
 
@@ -181,7 +181,7 @@ namespace Project2D
             return scenes[currentScene];
         }
 
-        public static Character GetPlayer()
+        public static Player GetPlayer()
 		{
             return player;
 		}

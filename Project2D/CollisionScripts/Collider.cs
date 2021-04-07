@@ -9,6 +9,10 @@ using Mlib;
 
 namespace Project2D
 {
+
+	/// <summary>
+	/// A rectangle collider stored as a width vector, a height vector, and a centre point
+	/// </summary>
 	class Collider
 	{
 		protected PhysicsObject connected;
@@ -33,6 +37,7 @@ namespace Project2D
 		{
 			return connected;
 		}
+		
 		public Collider(float minX, float minY, float width, float height, CollisionLayer layer = CollisionLayer.Default)
 		{
 			centrePoint = new Vector2(minX + width / 2, minY + height / 2);
@@ -97,7 +102,7 @@ namespace Project2D
 			float inert;
 
 			//OKAY I KNOW THIS IS TERRIBLE BUT THE ONLY WAY I FOUND TO GET INERTIA FOR A 2D OBJECT WAS FOR TRIANGLES
-			//(because inertia is not usually computed like this and this is probably technically wrong)
+			//also I now realize I could have used 2 triangles, not four, but shut up
 			Vector2 a = centrePoint + new Vector2( -halfWidth, halfHeight);
 			Vector2 b = centrePoint + new Vector2( halfWidth, - halfHeight);
 			float triMass = connected.density * 0.5f * Math.Abs(a.ZCross(b));
@@ -218,13 +223,11 @@ namespace Project2D
 	{
 		public float distanceAlongRay;
 		public PhysicsObject objectHit;
-		public float secondaryDistanceHit;
 
-		public Hit(float distanceAlongRay, PhysicsObject colliderHit, float secondDist = float.PositiveInfinity)
+		public Hit(float distanceAlongRay, PhysicsObject colliderHit)
 		{
 			this.distanceAlongRay = distanceAlongRay;
 			this.objectHit = colliderHit;
-			secondaryDistanceHit = secondDist;
 		}
 	}
 

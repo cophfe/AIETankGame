@@ -9,6 +9,9 @@ using Mlib;
 
 namespace Project2D
 {
+	/// <summary>
+	/// A UI object attached to a player object that shows the hunger value
+	/// </summary>
 	class HungerHolder : GameObject
 	{
 		Vector2 size;

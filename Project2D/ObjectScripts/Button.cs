@@ -15,7 +15,6 @@ namespace Project2D
 
 	class Button : GameObject
 	{
-		
 		OnMouseEnter mE;
 		OnMouseLeave mL;
 		OnMouseHover mH;

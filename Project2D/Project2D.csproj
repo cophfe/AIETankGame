@@ -69,7 +69,7 @@
     <Compile Include="MlibToRaylib.cs" />
     <Compile Include="ObjectScripts\PhysicsObject.cs" />
     <Compile Include="PlayerScripts\Eye.cs" />
-    <Compile Include="PlayerScripts\Character.cs" />
+    <Compile Include="PlayerScripts\Player.cs" />
     <Compile Include="PlayerScripts\LineOfSight.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

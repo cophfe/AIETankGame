@@ -9,6 +9,9 @@ using Mlib;
 
 namespace Project2D
 {
+	/// <summary>
+	/// A root object containing all UI, cameras, the collision manager, and the drawing rules
+	/// </summary>
 	class Scene : GameObject
 	{
 		protected List<GameObject> UI = new List<GameObject>();

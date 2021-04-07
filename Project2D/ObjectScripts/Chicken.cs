@@ -12,7 +12,7 @@ namespace Project2D
 	class Chicken : PhysicsObject
 	{
 		public bool still = true;
-		Character player;
+		Player player;
 		public static float distanceToScare = 300;
 		public static float speed = 100;
 		public static float runMultiplier = 3;
@@ -34,7 +34,7 @@ namespace Project2D
 		bool dead = false;
 		bool dying = false;
 		float timer = 0;
-		Random rand = new Random();
+		static Random rand = new Random();
 		Vector2 targetVelocity = Vector2.Zero;
 		static Matrix3 rayRotationMatrix = Matrix3.GetRotateZ(Trig.pi * 2 / rayNumber);
 		static Matrix3 explosionRotationMatrix = Matrix3.GetRotateZ(Trig.pi * 2 / featherExplosionNumber);
@@ -42,7 +42,7 @@ namespace Project2D
 
 		float deathPercentDone = 0;
 		
-		public Chicken(TextureName fileName, Vector2 position, Character player, Sprite loadedSprite = null) : base(fileName, position, 0.5f, new Collider(-40, -55, 80, 110, CollisionLayer.Enemy), 0.5f, 0.5f, 1f, 0f, density: 1, isRotatable: false)
+		public Chicken(TextureName fileName, Vector2 position, Player player, Sprite loadedSprite = null) : base(fileName, position, 0.5f, new Collider(-40, -55, 80, 110, CollisionLayer.Enemy), 0.5f, 0.5f, 1f, 0f, density: 1, isRotatable: false)
 		{
 			if (loadedSprite != null)
 				spriteManager = loadedSprite;
@@ -53,6 +53,7 @@ namespace Project2D
 			spriteManager.Pause();
 			spriteManager.SetLayer(SpriteLayer.Background);
 			spriteManager.SetTint(colour);
+			timer += (float)rand.NextDouble();
 			this.player = player;
 		}
 
@@ -98,7 +99,7 @@ namespace Project2D
 			}
 			if (dying)
 			{
-				if (spriteManager.CurrentFrame() == 51)
+				if (spriteManager.GetCurrentFrame() == 51)
 				{
 					spriteManager.Pause();
 					dead = true;

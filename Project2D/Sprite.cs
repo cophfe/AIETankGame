@@ -10,6 +10,9 @@ using static Raylib.Raylib;
 
 namespace Project2D
 {
+	/// <summary>
+	/// The image drawer attached to every game object
+	/// </summary>
 	class Sprite
 	{
 		float timer = 0;
@@ -118,11 +121,17 @@ namespace Project2D
 			DrawTexturePro(frames[currentFrame], flipped, spriteRectangle, origin, globalRotation * Trig.rad2Deg, tint);
 		}
 
+		/// <summary>
+		/// Pauses the sprite's animation
+		/// </summary>
 		public void Pause()
 		{
 			pause = true;
 		}
 
+		/// <summary>
+		/// Resumes the sprite's animation after being paused
+		/// </summary>
 		public void Play()
 		{
 			pause = false;
@@ -130,6 +139,9 @@ namespace Project2D
 			timer = 0;
 		}
 
+		/// <summary>
+		/// Plays the animation from a specified frame
+		/// </summary>
 		public void PlayFrom(int frame)
 		{
 			pause = false;
@@ -138,31 +150,49 @@ namespace Project2D
 			timer = 0;
 		}
 
+		/// <summary>
+		/// Sets the current frame to a value
+		/// </summary>
 		public void SetFrame(int frame)
 		{
 			currentFrame = frame;
 		}
 
+		/// <summary>
+		/// Sets the number of milliseconds per frame
+		/// </summary>
 		public void SetSpeed(float milliseconds)
 		{
 			timeCap = milliseconds;
 		}
 
+		/// <summary>
+		/// Sets whether the sprite is flipped on the X axis
+		/// </summary>
 		public void FlipX(bool isFlipped)
 		{
 			flipX = isFlipped;
 		}
 
+		/// <summary>
+		/// Sets whether the sprite is flipped on the Y axis
+		/// </summary>
 		public void FlipY(bool isFlipped)
 		{
 			flipY = isFlipped;
 		}
 
+		/// <summary>
+		/// Inverts the animation (Note: backwards looping is not handled by the sprite))
+		/// </summary>
 		public void SetBackwards(bool isBackwards)
 		{
 			backwardsMultiplier = isBackwards ? -1 : 1;
 		}
 
+		/// <summary>
+		/// Sets the limits of an animation (where it starts and where it loops)
+		/// </summary>
 		public void SetLimits(int start, int end)
 		{
 			startFrame = start;
@@ -173,21 +203,33 @@ namespace Project2D
 			}
 		}
 
-		public int CurrentFrame()
+		/// <summary>
+		/// Returns the current frame
+		/// </summary>
+		public int GetCurrentFrame()
 		{
 			return currentFrame;
 		}
 
+		/// <summary>
+		/// Returns the width of the sprite
+		/// </summary>
 		public int GetWidth()
 		{
 			return frames[0].width;
 		}
 
+		/// <summary>
+		/// Returns the height of the sprite
+		/// </summary>
 		public int GetHeight()
 		{
 			return frames[0].height;
 		}
 
+		/// <summary>
+		/// Returns all the files in a folder as a texture (note: assumes all files are images)
+		/// </summary>
 		public static Texture2D[] GetFramesFromFolder(string folderName)
 		{
 			string[] files = Directory.GetFiles($"../Images/{folderName}/");
@@ -199,27 +241,42 @@ namespace Project2D
 			return frames;
 		}
 
+		/// <summary>
+		/// Sets the tint of the sprite
+		/// </summary>
 		public void SetTint(Colour c)
 		{
 			tint = c;
 		}
 
+		/// <summary>
+		/// Returns the tint of a sprite
+		/// </summary>
 		public Colour GetTint()
 		{
 			return tint;
 		}
 
+		/// <summary>
+		/// Clones the sprite's values into a new sprite
+		/// </summary>
 		public Sprite Clone()
 		{
 			return new Sprite(frames, timeCap, startFrame, lastFrame, null, tint, isAnimated, sort, layer);
 		}
 
+		/// <summary>
+		/// Sets the gameobject attatched to this sprite
+		/// </summary>
 		public void SetAttachedGameObject(GameObject attached)
 		{
 			attachedGameObject = attached;
 		}
 	}
 
+	/// <summary>
+	/// The names of all available textures
+	/// </summary>
 	enum TextureName
 	{
 		None,

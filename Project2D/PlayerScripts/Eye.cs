@@ -9,6 +9,9 @@ using static Raylib.Raylib;
 
 namespace Project2D
 {
+	/// <summary>
+	/// A child object of the player that follows the mouse cursor and enables laser shooting
+	/// </summary>
 	class Eye : GameObject
 	{
 		Vector2 targetPosition;
@@ -102,11 +105,11 @@ namespace Project2D
 						redVal *= 2;
 					camTarget += Vector2.Lerp(Vector2.Zero, middlePoint + cameraOffset, 0.1f * redVal * 0.00192156863f);
 
-					(parent as Character).GetTiedCamera().Target(camTarget);
+					(parent as Player).GetTiedCamera().Target(camTarget);
 				}
 			}
-			else if (parent is Character)
-				(parent as Character).GetTiedCamera().Target(parent.LocalPosition);
+			else if (parent is Player)
+				(parent as Player).GetTiedCamera().Target(parent.LocalPosition);
 			if (isLasering)
 			{
 				Ray ray = new Ray(GlobalPosition, (mousePos - GlobalPosition).Normalised());
@@ -123,7 +126,7 @@ namespace Project2D
 					}
 					else
 					{
-						hit.objectHit.AddImpulseAtPosition(ray.direction * 9000000 * Game.deltaTime, (ray.direction * hit.distanceAlongRay + ray.position) - hit.objectHit.GetCollider().GetCentrePoint());
+						hit.objectHit.AddImpulseAtPosition(ray.direction * 20000000 * Game.deltaTime, (ray.direction * hit.distanceAlongRay + ray.position) - hit.objectHit.GetCollider().GetCentrePoint());
 
 					}
 				}
