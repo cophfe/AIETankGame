@@ -104,7 +104,7 @@ namespace Project2D
 		{
 			//this raycast was done using this algorithm 
 			//http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-custom-ray-obb-function/
-			//this page isn't the only one to use these concepts but it is were i found out how to do this without (many) transformation shenanigans
+			//this page isn't the only one to use these concepts but it is where I found out how to do this without (many) transformation shenanigans
 
 			bool collided = false;
 			float distance = float.PositiveInfinity;
