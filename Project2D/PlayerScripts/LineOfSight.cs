@@ -23,7 +23,6 @@ namespace Project2D
 		static Matrix3 offsetBack = Matrix3.GetRotateZ(-0.0001f);
 		static float rayLimit = 2000;
 		static float centreDistLimit = rayLimit;
-		static Colour darkTint = new Colour(255, 255, 255, 50);
 		static CollisionManager cM;
 		static RenderTexture2D lineOfSightTexture;
 

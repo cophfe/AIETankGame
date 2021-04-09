@@ -272,6 +272,15 @@ namespace Project2D
 		{
 			attachedGameObject = attached;
 		}
+
+		public void UnloadFrames()
+		{
+			for (int i = 0; i < frames.Length; i++)
+			{
+				UnloadTexture(frames[i]);
+			}
+			
+		}
 	}
 
 	/// <summary>

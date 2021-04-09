@@ -43,6 +43,7 @@ namespace Project2D
 			{
 				children[i].Update();
 			}
+			camera.UpdateLineOfSight();
 		}
 
 		public void UpdateUI()
@@ -82,7 +83,7 @@ namespace Project2D
 			
 				{
 					children[j + 1] = children[j];
-					j = j - 1;
+					j -= 1;
 				}
 				children[j + 1] = cache;
 			}
@@ -102,7 +103,6 @@ namespace Project2D
 				}
 			}
 
-			camera.StartCamera();
 			//end 2d camera
 			camera.EndCamera();
 

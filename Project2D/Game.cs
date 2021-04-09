@@ -18,6 +18,7 @@ namespace Project2D
         private long lastTime = 0;
         public static float timer = 0;
         public static int fps = 1;
+        public static bool lOS = false;
         private int frames;
         public static bool pause = false;
         static public float deltaTime = 0.005f;
@@ -94,7 +95,7 @@ namespace Project2D
                 {
                     playButton.GetSprite().SetFrame(1);
                     playButton.GetSprite().SetTint(RLColor.WHITE);
-                    playButton.LocalScale = Vector2.One * 0.96f;
+                    playButton.LocalScale = Vector2.One * 0.94f;
                     playButton.UpdateTransforms();
                 }
                 if (IsMouseButtonReleased(MouseButton.MOUSE_LEFT_BUTTON))
@@ -103,7 +104,10 @@ namespace Project2D
 					{
                         currentScene++;
                         pause = true;
-					}
+                        lOS = true;
+                        UnloadTexture(GetTextureFromName(TextureName.Button));
+                        UnloadTexture(GetTextureFromName(TextureName.Eye));
+                    }
                 }
             });
 
@@ -133,9 +137,8 @@ namespace Project2D
                 player,
                 new Chicken(TextureName.Chicken, Vector2.Zero, player),
                 "../Images/map3.png", s, true);
-            camera = new SmoothCamera(scenes[1], player.GlobalPosition, 0, 1f, new Vector2(0, 0), true, CollisionLayer.Player, CollisionLayer.Enemy);
+            camera = new SmoothCamera(scenes[1], player.GlobalPosition, 0, 1f, new Vector2(0, 0), CollisionLayer.Player, CollisionLayer.Enemy);
             player.SetTiedCamera(camera);
-            camera.LocalPosition = player.LocalPosition;
             new StartText(1f, s);
             
             currentScene = 0;
@@ -172,7 +175,6 @@ namespace Project2D
         public void Draw()
         {
             //draw all objects and UI
-            
             scenes[currentScene].Draw();
 
         }

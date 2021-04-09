@@ -57,10 +57,7 @@ namespace Project2D
 
 		public static void ResolveCollision(CollisionPair pair)
 		{
-			Vector2 normal;
-			float penetration;
-			CollisionPoints collisionPoints;
-			GetCollisionInformation(pair, out penetration, out normal, out collisionPoints);
+			GetCollisionInformation(pair, out float penetration, out Vector2 normal, out CollisionPoints collisionPoints);
 			if (collisionPoints == null)
 				return;
 
@@ -103,8 +100,6 @@ namespace Project2D
 		}
 
 		#region Ray Casting
-		static Matrix3 rotateClock = Matrix3.GetRotateZ(Trig.pi /2);
-		static Matrix3 rotateAntiClock = Matrix3.GetRotateZ(Trig.pi / -2);
 		public bool RayCast(Ray ray, out Hit hit, float magnitude = float.PositiveInfinity, params CollisionLayer[] ignoredLayers)
 		{
 			//this raycast was done using this algorithm 

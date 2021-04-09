@@ -11,13 +11,13 @@ namespace Project2D
 {
 	class Player : PhysicsObject
 	{
-		static float velocityCap = 300f;
-		static float accelerationCap = 4000;
+		static float velocityCap;
+		static float accelerationCap;
 		static float accelerationCapNorm = 4000;
 		static float velocityCapNorm = 300;
 		static float velocityCapSlow = 200;
-		static int frameSpeed = 25;
-		static int frameSpeedNorm = 25;
+		static int frameSpeed;
+		static int frameSpeedNorm = 30;
 		static int frameSpeedAddition = 5;
 		static int frameSpeedSlowDown = -20;
 
@@ -158,7 +158,7 @@ namespace Project2D
 			{
 				inputDirection -= Vector2.Right;
 				spriteManager.FlipX(false);
-				head.GetSprite().FlipX(false);
+				headSprite.FlipX(false);
 				fix.GetSprite().FlipX(false);
 				eye1.FlipX(false);
 				chicken.GetSprite().FlipX(false);
@@ -169,7 +169,7 @@ namespace Project2D
 			{
 				inputDirection += Vector2.Right;
 				spriteManager.FlipX(true);
-				head.GetSprite().FlipX(true);
+				headSprite.FlipX(true);
 				fix.GetSprite().FlipX(true);
 				eye1.FlipX(true);
 				chicken.GetSprite().FlipX(true);
@@ -211,7 +211,7 @@ namespace Project2D
 						buildUp = 0;
 						eye1.SetLaser(true);
 						camera.SetShakeAmount(5);
-						return;
+						break;
 					}
 					eyeColor.r++;
 					buildUp--;
@@ -229,7 +229,7 @@ namespace Project2D
 					{
 						cooling = false;
 						buildUp = 0;
-						return;
+						break;
 					}
 
 					eyeColor.r--;
@@ -330,8 +330,6 @@ namespace Project2D
 							h.hungerPercent = (float)(chickensEatenTotal) / chickenTotalInScene;
 							h.chickenCount = chickenTotalInScene - chickensEatenTotal;
 						}
-						
-						return;
 					}
 				}
 			}
@@ -375,10 +373,12 @@ namespace Project2D
 			}
 			inputVelocity = velocityCap > accelerationCap * Game.deltaTime ? inputVelocity : cache + velocity;
 			AddVelocity(inputVelocity);
+			
 			base.Update();
 			LineOfSight.SetOrigin(LocalPosition + lOSOffset);
 			if (!newGamePlus)
 				h.chickenCount = chickenTotalInScene - chickensEatenTotal;
+
 		}
 
 		Vector2 lOSOffset = new Vector2(0, 50);

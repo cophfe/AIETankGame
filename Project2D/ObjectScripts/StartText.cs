@@ -32,6 +32,7 @@ namespace Project2D
 				spriteManager.Pause();
 				Game.pause = false;
 				s.GetUIElements().Remove(this);
+				spriteManager.UnloadFrames();
 			}
 			base.Update();
 		}

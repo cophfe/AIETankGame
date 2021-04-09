@@ -19,23 +19,21 @@ namespace Project2D
 		Vector2 offset;
 		public float smoothMultiplier = 9;
 		bool on = true;
-		bool lineOfSight = true;
 		private Vector2 globalPosition;
 		GameObject targetObject = null;
 		Random rand = new Random(); 
 		Vector2 shake = Vector2.Zero;
 		float shakeAmount;
 
-		public SmoothCamera(Scene parent, Vector2 position, float rotation, float zoom, Vector2 offset, bool lineOfSight = true, params CollisionLayer[] ignoredLineOfSight) : base (TextureName.None , position, 1, rotation, parent, false)
+		public SmoothCamera(Scene parent, Vector2 position, float rotation, float zoom, Vector2 offset, params CollisionLayer[] ignoredLineOfSight) : base (TextureName.None , position, 1, rotation, parent, false)
 		{
 			this.offset = new Vector2(Game.screenWidth / 2 + offset.x, GetScreenHeight() / 2 + offset.y);
 			camera = new Camera2D { target = position, offset = position + new Vector2(GetScreenWidth() / 2 + offset.x, GetScreenHeight() / 2 + offset.y), zoom = zoom, rotation = rotation };
-			this.lineOfSight = lineOfSight;
 			LineOfSight.SetIgnored(ignoredLineOfSight);
 			GameObject vignette = new GameObject(TextureName.Vignette);
 			AddChild(vignette);
 			vignette.GetSprite().SetLayer(SpriteLayer.Foreground);
-			vignette.LocalScale = new Vector2(Game.screenWidth, Game.screenHeight) / (1150);
+			vignette.LocalScale = new Vector2(Game.screenWidth, Game.screenHeight) / (1120);
 			LineOfSight.SetMaxDist(new Vector2(Game.screenWidth/2, Game.screenHeight/ 2).Magnitude() + smoothMultiplier * 15);
 			parent.SetCamera(this);
 			LineOfSight.Initiate(parent);
@@ -64,12 +62,7 @@ namespace Project2D
 			camera.target = GlobalPosition;
 			camera.offset = offset - GlobalPosition + shake;
 			camera.rotation = GlobalRotation;
-			if (lineOfSight)
-			{
-				//(target should be inside objects collisionBox)
-				target.y += 59;
-				LineOfSight.Update();
-			}
+			
 		}
 
 		public void StartCamera()
@@ -83,8 +76,17 @@ namespace Project2D
 
 		public void DrawLineOfSight()
 		{
-			if (lineOfSight)
+			if (Game.lOS)
 				LineOfSight.Draw();
+		}
+
+		public void UpdateLineOfSight()
+		{
+			if (Game.lOS)
+			{
+				//target.y += 59;
+				LineOfSight.Update();
+			}
 		}
 
 		public void Target(GameObject obj)
