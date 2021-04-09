@@ -15,11 +15,11 @@ namespace Project2D
 		static float accelerationCap = 4000;
 		static float accelerationCapNorm = 4000;
 		static float velocityCapNorm = 300;
-		static float velocityCapSlow = 230;
+		static float velocityCapSlow = 200;
 		static int frameSpeed = 25;
 		static int frameSpeedNorm = 25;
 		static int frameSpeedAddition = 5;
-		static int frameSpeedSlowDown = -5;
+		static int frameSpeedSlowDown = -20;
 
 		const float velocityFasterAddition = 100f;
 		const float accelerationFasterAddition = 500f;
@@ -31,15 +31,15 @@ namespace Project2D
 		List<SuckedChickenInfo> suckedChickens = new List<SuckedChickenInfo>();
 		const float chickenSuckSpeed = 0.5f;
 		static Vector2 eatingOffset = new Vector2(-21, 21);
+		float defaultIMass;
 
-		Eye eye1;
-		Eye eye2;
-		GameObject head;
-		GameObject fix;
-		GameObject chicken;
-		GameObject headHolder;
-
-		Sprite headSprite;
+		readonly Eye eye1;
+		readonly Eye eye2;
+		readonly GameObject head;
+		readonly GameObject fix;
+		readonly GameObject chicken;
+		readonly GameObject headHolder;
+		readonly Sprite headSprite;
 
 		SmoothCamera camera;
 
@@ -58,6 +58,7 @@ namespace Project2D
 		public int chickenTotalInScene = 0;
 		public int chickensEatenTotal = 0;
 		bool running = false;
+		bool newGamePlus = false;
 
 		float[] eyeOffset = new float[24]
 		{
@@ -69,7 +70,7 @@ namespace Project2D
 			0, -5, -31, -35, -40, -44, -29, -14, 8, 3
 		};
 
-		public Player(TextureName fileName, Vector2 position, float scale, float rotation, Scene scene, Collider collider) : base(fileName, position, 1, collider, 0.5f, 3f, 0f, 0f, scene, 1, true, false)
+		public Player(TextureName fileName, Vector2 position, Scene scene, Collider collider) : base(fileName, position, 1, collider, 0.5f, 3f, 0f, 0f, scene, 1, true, false)
 		{
 			eye1 = new Eye(new Vector2(-34, -21), 7, 0.14f);
 			eye2 = new Eye(new Vector2(9, -19), eye1);
@@ -87,8 +88,10 @@ namespace Project2D
 			head.SetSprite(headSprite);
 			headSprite.Pause();
 
-			fix = new GameObject(TextureName.HeadFix, Vector2.Up * -150, 1, 0, head);
-			fix.LocalScale = new Vector2(1, 3);
+			fix = new GameObject(TextureName.HeadFix, Vector2.Up * -150, 1, 0, head)
+			{
+				LocalScale = new Vector2(1, 3)
+			};
 
 			chicken = new GameObject(TextureName.CookedChicken, eatingOffset, 0.5f, 0, headHolder);
 			chicken.GetSprite().SetSort(-1);
@@ -100,8 +103,9 @@ namespace Project2D
 			LocalPosition = Vector2.One * 100;
 			collider.SetCollisionLayer(CollisionLayer.Player);
 			spriteManager.SetLayer(SpriteLayer.Midground);
-
-			h = new HungerHolder(TextureName.Xray, 200, 300, new Vector2(Game.screenWidth - 100, 130), 1, null);
+			defaultIMass = iMass;
+			h = new HungerHolder(TextureName.Xray, new Vector2(Game.screenWidth - 100, 130), 1, null);
+			
 			Game.GetCurrentScene().AddUIElement(h);
 		}
 
@@ -110,15 +114,35 @@ namespace Project2D
 		public override void Update()
 		{
 			accelerationCap = accelerationCapNorm;
-			if (h.hungerPercent >= 1)
+			if (newGamePlus)
 			{
+				
 				velocityCap = velocityCapSlow;
 				frameSpeed = frameSpeedNorm - frameSpeedSlowDown;
+				scale = new Vector2(1.05f, 1.05f);
+				int f = spriteManager.GetCurrentFrame();
+				if ((f >= 1 && f <= 3) || (f >= 12 && f <= 14))
+				{
+					camera.SetShakeAmount(4);
+					new Feather(position + new Vector2(Game.globalRand.Next(-20,20), 110), (float)Game.globalRand.NextDouble() * Trig.pi * 2 - Trig.pi, (float)Game.globalRand.NextDouble() * 0.2f + 0.1f, -3f * new Vector2(velocity.x, (float)Game.globalRand.NextDouble() * 50 - 25), (float)Game.globalRand.NextDouble() - 0.5f, Game.GetCurrentScene(), SpriteLayer.Foreground, true);
+					iMass = 0.000001f;
+					Eye.laserPower = 200000000;
+					Eye.cookStrength = 50;
+					chickenEatAmount = 200;
+				}
+				else
+				{
+					camera.SetShakeAmount(0);
+				}
 			}
 			else
 			{
+				Eye.cookStrength = 5;
+				iMass = defaultIMass;
+				Eye.laserPower = 20000000;
 				velocityCap = velocityCapNorm;
 				frameSpeed = frameSpeedNorm;
+				scale = Vector2.One;
 			}
 			inputDirection = Vector2.Zero;
 			
@@ -222,7 +246,7 @@ namespace Project2D
 				buildUp = 0;
 			}
 
-			if (!charging && IsMouseButtonPressed(MouseButton.MOUSE_RIGHT_BUTTON))
+			if (!charging && IsMouseButtonPressed(MouseButton.MOUSE_RIGHT_BUTTON) && eyeColor.r != 255)
 			{
 				headSprite.SetLimits(0, 5);
 				headSprite.SetBackwards(false);
@@ -269,12 +293,17 @@ namespace Project2D
 						camera.SetShakeAmount(0);
 						chickensEatenTotal += chickenEatAmount;
 						h.hungerPercent = (float)chickensEatenTotal / chickenTotalInScene;
-					
-						if (chickenEatAmount > 0)
+
+						if (newGamePlus || chickensEatenTotal >= chickenTotalInScene)
 						{
-							Console.WriteLine($"Chickens Left: {chickenTotalInScene- chickensEatenTotal}");
+							newGamePlus = true;
+							chickenEatAmount = 300;
 						}
-						chickenEatAmount = 0;
+						else
+						{
+							chickenEatAmount = 0;
+						}
+						
 						chicken.SetDrawn(false);					
 					}
 					else if (fr > 6)
@@ -289,15 +318,19 @@ namespace Project2D
 					{
 						Vector2 direction = (camera.GetMouseWorldPosition() - chicken.GlobalPosition).Normalised() * 500;
 						new PhysicsChicken(chicken.GlobalPosition, direction, 0.1f, 3);
-						Vector2 rot = direction.Rotated(-Trig.pi / 4);
+						Vector2 rot = direction.Rotated(-Trig.pi / 8);
 						for (int i = 0; i < 15; i++)
 						{
-							new Feather(position, (float)Game.globalRand.NextDouble() * Trig.pi * 2 - Trig.pi, (float)Game.globalRand.NextDouble() * 0.2f + 0.1f, rot, (float)Game.globalRand.NextDouble() - 0.5f, Game.GetCurrentScene());
-							rot.Rotate(Trig.pi * 0.0335f);
+							new Feather(position, (float)Game.globalRand.NextDouble() * Trig.pi * 2 - Trig.pi, (float)Game.globalRand.NextDouble() * 0.2f + 0.1f, (float)(Game.globalRand.NextDouble() * 0.5f + 1) * rot.Rotated((float)Game.globalRand.NextDouble() * 0.1f - 0.05f), (float)Game.globalRand.NextDouble() - 0.5f, Game.GetCurrentScene(), SpriteLayer.Foreground);
+							rot.Rotate(Trig.pi * 0.01675f);
 						}
-						chickensEatenTotal--;
-						h.hungerPercent = (float)(chickensEatenTotal) / chickenTotalInScene;
-						Console.WriteLine($"Chickens Left: {chickenTotalInScene- chickensEatenTotal}");
+						if (!newGamePlus)
+						{
+							chickensEatenTotal--;
+							h.hungerPercent = (float)(chickensEatenTotal) / chickenTotalInScene;
+							h.chickenCount = chickenTotalInScene - chickensEatenTotal;
+						}
+						
 						return;
 					}
 				}
@@ -344,6 +377,8 @@ namespace Project2D
 			AddVelocity(inputVelocity);
 			base.Update();
 			LineOfSight.SetOrigin(LocalPosition + lOSOffset);
+			if (!newGamePlus)
+				h.chickenCount = chickenTotalInScene - chickensEatenTotal;
 		}
 
 		Vector2 lOSOffset = new Vector2(0, 50);
@@ -397,7 +432,7 @@ namespace Project2D
 		{
 			for (int i = 0; i < suckedChickens.Count; i++)
 			{
-				suckedChickens[i].chicken.CancelSuck(suckedChickens[i].positionAtStart.y);
+				suckedChickens[i].chicken.CancelSuck();
 			}
 			suckedChickens.Clear();
 		}

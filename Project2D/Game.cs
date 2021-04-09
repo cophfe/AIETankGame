@@ -19,14 +19,14 @@ namespace Project2D
         public static float timer = 0;
         public static int fps = 1;
         private int frames;
-        public bool pause = false;
+        public static bool pause = false;
         static public float deltaTime = 0.005f;
 
         public static float screenWidth;
         public static float screenHeight;
 
         //Scenes are gameobjects that hold every other gameobject
-        static List<Scene> scenes = new List<Scene>();
+        static readonly List<Scene> scenes = new List<Scene>();
 
         public static Texture2D[] textures;
 
@@ -73,7 +73,7 @@ namespace Project2D
                 LoadTexture("../Images/wall.png"),
                 LoadTexture("../Images/sideWall.png"),
                 LoadTexture("../Images/xray.png"),
-                LoadTexture("../Images/gooBird.png"),
+                LoadTexture("../Images/eggBird.png"),
             };
 
             Scene startMenu = new Scene();
@@ -100,7 +100,10 @@ namespace Project2D
                 if (IsMouseButtonReleased(MouseButton.MOUSE_LEFT_BUTTON))
                 {
                     if (playButton.GetSprite().GetCurrentFrame() == 1)
+					{
                         currentScene++;
+                        pause = true;
+					}
                 }
             });
 
@@ -124,7 +127,7 @@ namespace Project2D
             Scene s = new Scene();
             scenes.Add(s);
             currentScene++;
-            player = new Player(TextureName.Player, new Vector2(250, 250), 0.3f, 0, null, new Collider(-40, 45, 80, 60));
+            player = new Player(TextureName.Player, new Vector2(250, 250), null, new Collider(-40, 45, 80, 60));
             MapFromImage.MakeSceneFromImage(new PhysicsObject(TextureName.Wall, Vector2.One * 300, 1f, null, 1f, 1, 3f, 0, null, 1, false),//new Collider(-135.5f, -92f, 271f, 271f)
                 new PhysicsObject(TextureName.Bale, Vector2.Zero, 0.7f, Collider.FromTextureName(TextureName.Bale), 2f, 3, 0.7f, 0, null, 3f, true),
                 player,
@@ -133,9 +136,11 @@ namespace Project2D
             camera = new SmoothCamera(scenes[1], player.GlobalPosition, 0, 1f, new Vector2(0, 0), true, CollisionLayer.Player, CollisionLayer.Enemy);
             player.SetTiedCamera(camera);
             camera.LocalPosition = player.LocalPosition;
+            new StartText(1f, s);
             
             currentScene = 0;
         }
+
         public void Shutdown()
         {
         }
@@ -169,6 +174,7 @@ namespace Project2D
             //draw all objects and UI
             
             scenes[currentScene].Draw();
+
         }
 
         public static Texture2D GetTextureFromName(TextureName name)

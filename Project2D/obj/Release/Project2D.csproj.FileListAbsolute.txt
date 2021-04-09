@@ -98,7 +98,6 @@ C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\bin\Release\System.Xml
 C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\bin\Release\System.Xml.XPath.dll
 C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\bin\Release\System.Xml.XPath.XDocument.dll
 C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\bin\Release\Mlib.dll
-C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\bin\Release\Mlib.pdb
 C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\obj\Release\Project2D.exe.config
 C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\obj\Release\Project2D.csproj.CoreCompileInputs.cache
 C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\obj\Release\Project2D.csproj.CopyComplete
@@ -210,3 +209,5 @@ C:\Users\s210575\Documents\CFettes\Maths For Games\Game\Project2D\obj\Release\Pr
 C:\Users\s210575\Documents\CFettes\Maths For Games\Game\Project2D\obj\Release\Project2D.csproj.CopyComplete
 C:\Users\s210575\Documents\CFettes\Maths For Games\Game\Project2D\obj\Release\Project2D.exe
 C:\Users\s210575\Documents\CFettes\Maths For Games\Game\Project2D\obj\Release\Project2D.pdb
+C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\bin\Release\System.Drawing.Common.dll
+C:\Users\cphfe\Desktop\AIE\MathsForGames\Game2D\Project2D\obj\Release\Project2D.csprojAssemblyReference.cache

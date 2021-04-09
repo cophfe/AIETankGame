@@ -9,7 +9,6 @@ using Mlib;
 
 namespace Project2D
 {
-
 	/// <summary>
 	/// A rectangle collider stored as a width vector, a height vector, and a centre point
 	/// </summary>

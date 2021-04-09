@@ -64,7 +64,6 @@ namespace Project2D
 			camera.target = GlobalPosition;
 			camera.offset = offset - GlobalPosition + shake;
 			camera.rotation = GlobalRotation;
-
 			if (lineOfSight)
 			{
 				//(target should be inside objects collisionBox)

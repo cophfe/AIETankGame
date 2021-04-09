@@ -12,33 +12,28 @@ namespace Project2D
 	class Chicken : PhysicsObject
 	{
 		public bool still = true;
-		Player player;
+		readonly Player player;
 		public static float distanceToScare = 300;
 		public static float speed = 100;
 		public static float runMultiplier = 3;
 		public static float runDist = 200;
 		public static float eventTime = 1;
 		public static float accelerationCap = 2000;
-		public static float rayNumber = 0;
 		public static float featherExplosionNumber = 24;
 		public static float featherExplosionSpeed = 200;
 		public static float avoidDistance = 50;
-		public static float rayLimit = 1000;
 		public static float cookedLimit = 3;
 		public float cookedValue = 0;
-		float deathY = 0;
 		bool controlledByPlayer = false;
 		static Colour colour = new Colour(255, 255, 255, 255);
 
-		bool falling = false;
 		bool dead = false;
 		bool dying = false;
 		float timer = 0;
 		static Random rand = new Random();
 		Vector2 targetVelocity = Vector2.Zero;
-		static Matrix3 rayRotationMatrix = Matrix3.GetRotateZ(Trig.pi * 2 / rayNumber);
 		static Matrix3 explosionRotationMatrix = Matrix3.GetRotateZ(Trig.pi * 2 / featherExplosionNumber);
-		static Texture2D[] frames = Sprite.GetFramesFromFolder("Chicken");
+		static readonly Texture2D[] frames = Sprite.GetFramesFromFolder("Chicken");
 
 		float deathPercentDone = 0;
 		
@@ -82,16 +77,6 @@ namespace Project2D
 							rotation = (float)Math.Sin(Game.currentTime / (200 - deathPercentDone * 0.5f)) * deathPercentDone * 0.001f;
 						}
 						new Smoke(LocalPosition + new Vector2((float)rand.NextDouble() * 50 - 25, (float)rand.NextDouble() * 30 + 10), 0, (float)rand.NextDouble() * 0.15f, 5, player.GetChicken(), new Vector2((float)rand.NextDouble() * 20 - 10, (float)rand.NextDouble() * 20 - 10), 0, Game.GetCurrentScene());
-					}
-				}
-				else if (falling)
-				{
-					if (deathY > position.y)
-						velocity.y += 1 * Game.deltaTime;
-					else
-					{
-						velocity.y = 0;
-						falling = false;
 					}
 				}
 
@@ -196,29 +181,6 @@ namespace Project2D
 				}
 			}
 
-			Vector2 rayVector = Vector2.Right;
-			Ray ray;
-			Hit hit;
-			CollisionManager cM = Game.GetCurrentScene().GetCollisionManager();
-
-			if (velocity != Vector2.Zero)
-			{
-				for (int i = 0; i < rayNumber; i++)
-				{
-					ray = new Ray(collider.GetCentrePoint(), rayVector);
-					if (cM.RayCast(ray, out hit, rayLimit, CollisionLayer.Player, CollisionLayer.Enemy))
-					{
-						
-						if (hit.distanceAlongRay < avoidDistance)
-						{
-							float weight = ray.direction.Dot(velocity.Normalised());
-							Vector2 directionVector = ray.direction * -targetVelocity.Magnitude();
-							targetVelocity = new Vector2(Trig.Lerp(targetVelocity.x, directionVector.x, 1 - weight), Trig.Lerp(targetVelocity.y, directionVector.y, 1- weight));
-						}
-					}
-					rayVector = rayRotationMatrix * rayVector;
-				}
-			}
 			float dot = velocity.Dot(Vector2.Right);
 			if (dot > 0.1f)
 				spriteManager.FlipX(true);
@@ -250,12 +212,10 @@ namespace Project2D
 			}
 		}
 
-		public void CancelSuck(float startY)
+		public void CancelSuck()
 		{
 			controlledByPlayer = false;
-			deathY = startY;
 			deathPercentDone = 0;
-			falling = true;
 		}
 
 		public override GameObject Clone()

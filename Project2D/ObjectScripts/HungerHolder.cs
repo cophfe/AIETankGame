@@ -19,23 +19,22 @@ namespace Project2D
 		Vector2 pos;
 		public float hungerPercent = 0f;
 		public float hungerVisual = 0f;
+		public int chickenCount;
 		RLColor backingColor = new RLColor(24, 12, 14, 255);
-		RLColor hungerFillColor = new RLColor(125, 65, 36, 255);
+		RLColor hungerFillColor = new RLColor(120, 120, 120, 255);
 		float timer = 0;
 		float easeTimer = 0;
 		bool easing = false;
 		float hungerStart = 0;
 		float timeMax = 4;
 		float wiggleStart = 3;
-		Sprite spr;
 
-		public HungerHolder(TextureName image, float width, float height, Vector2 position, float scale, Scene scene) : base(image, position, scale, 0, null, false)
+		public HungerHolder(TextureName image, Vector2 position, float scale, Scene scene) : base(image, position, scale, 0, null, false)
 		{
 			if (scene != null)
 				scene.AddUIElement(this);
 
-			spr = new Sprite(Sprite.GetFramesFromFolder("Xray"), 30, 0, 1, null, RLColor.WHITE,false);
-			new GameObject(image, Vector2.Zero, 0.25f, 0, this).SetSprite(spr);
+			new GameObject(image, Vector2.Zero, 0.25f, 0, this);
 
 			size = new Vector2(70, 45);
 			hungerSize = size;
@@ -84,13 +83,15 @@ namespace Project2D
 			DrawRectangleV(pos, size, hungerFillColor);
 			DrawRectangleV(pos, hungerSize, backingColor);
 			base.Draw();
-
+			
 			if (hungerPercent >= 1f)
 			{
-				spr.SetFrame(1);
+				DrawText($"WOW! YOU WIN!!!", (int)pos.x - 44, (int)pos.y + 105, 20, RLColor.RED);
 			}
 			else
-				spr.SetFrame(0);
+			{
+				DrawText($"Chickens Left: {chickenCount}", (int)pos.x - 50, (int)pos.y + 105, 20, RLColor.WHITE);
+			}
 		}
 	}
 }

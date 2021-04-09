@@ -47,9 +47,9 @@ namespace Project2D
 
 		public void UpdateUI()
 		{
-			foreach (var element in UI)
+			for (int i = 0; i < UI.Count; i++)
 			{
-				element.Update();
+				UI[i].Update();
 			}
 		}
 
@@ -144,6 +144,12 @@ namespace Project2D
 		{
 			UI.Add(UIObject);
 		}
+
+		public List<GameObject> GetUIElements()
+		{
+			return UI;
+		}
+
 		public void SetBackgroundColor(RLColor c)
 		{
 			backgroundColor = c;
