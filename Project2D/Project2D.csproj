@@ -54,7 +54,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MapFromImage.cs" />
     <Compile Include="ObjectScripts\Button.cs" />
     <Compile Include="ObjectScripts\Chicken.cs" />
     <Compile Include="ObjectScripts\StartText.cs" />

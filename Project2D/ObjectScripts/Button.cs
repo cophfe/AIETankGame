@@ -15,11 +15,12 @@ namespace Project2D
 
 	class Button : GameObject
 	{
-		OnMouseEnter mE;
+		//button uses delegates in case it was to be used in more than one place (each button would do a different thing and would need different functions to play)
+		OnMouseEnter mE; //these are self explanitory
 		OnMouseLeave mL;
 		OnMouseHover mH;
-		bool entered = false;
-		AABB buttonBounds;
+		bool entered = false; //is true when the mouse has entered the button bounds
+		AABB buttonBounds; //it is easy to store button bounds as an AABB
 
 		public Button(TextureName image, float width, float height, Vector2 position, float scale, Scene scene, OnMouseHover mouseHoverEvent = null, OnMouseEnter mouseEnterEvent = null, OnMouseLeave mouseLeaveEvent = null) : base(image, position, scale, 0, null, true)
 		{
@@ -59,6 +60,7 @@ namespace Project2D
 		{
 			if (isDrawn)
 			{
+				//this is pretty self explanitory: the button plays mH() when the mouse is hovering above the button, mE() when it enters the button bounds, and mL() when it leaves the button bounds.
 				Vector2 delta = GetMousePosition() - position;
 				if (delta.x > -buttonBounds.halfWidth && delta.x < buttonBounds.halfWidth && delta.y > -buttonBounds.halfHeight && delta.y < buttonBounds.halfHeight)
 				{

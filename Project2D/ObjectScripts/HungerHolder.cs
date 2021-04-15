@@ -9,13 +9,11 @@ using Mlib;
 
 namespace Project2D
 {
-	/// <summary>
-	/// A UI object attached to a player object that shows the hunger value
-	/// </summary>
+	// A UI object attached to a player object that shows the hunger value
 	class HungerHolder : GameObject
 	{
-		Vector2 size;
-		Vector2 hungerSize;
+		Vector2 size; //size of backing
+		Vector2 hungerSize; //size of non backing
 		Vector2 pos;
 		public float hungerPercent = 0f;
 		public float hungerVisual = 0f;
@@ -34,7 +32,7 @@ namespace Project2D
 			if (scene != null)
 				scene.AddUIElement(this);
 
-			new GameObject(image, Vector2.Zero, 0.25f, 0, this);
+			new GameObject(image, Vector2.zero, 0.25f, 0, this);
 
 			size = new Vector2(70, 45);
 			hungerSize = size;
@@ -43,8 +41,11 @@ namespace Project2D
 
 		public override void Update()
 		{
+			//if hungervisual is 1, than the backing rectangle has zero height
+			//the backing rectangle is drawn infront of the hunger rectangle, so when it is zero the hunger appears full
 			hungerSize.y = (1- hungerVisual) * size.y;
 
+			//the hunger eases towards the hungerpercent using an ease out function 
 			if (hungerVisual != hungerPercent || easeTimer > 0)
 			{
 				if (easing)
@@ -52,7 +53,7 @@ namespace Project2D
 					easeTimer += Game.deltaTime * 1f;
 					hungerVisual = hungerStart + (hungerPercent - hungerStart) * (float)(1 - Math.Pow(1 - easeTimer, 5));
 					if(easeTimer >= 1)
-					{
+					{//when it reaches 1 and the hunger visual is equal to the hunger percent, the easetimer is disabled
 						easing = false;
 						hungerVisual = hungerPercent;
 						easeTimer = 0;
@@ -60,21 +61,23 @@ namespace Project2D
 				}
 				else
 				{
+					//if easing hasn't started yet, set all needed variables
 					hungerStart = hungerVisual;
 					easing = true;
 				}
 			}
-			timer += Game.deltaTime * 2;
+
+			timer += Game.deltaTime * 2; //the hunger holder wobbles when more than 80% of chickens are eaten
 			if (hungerPercent > 0.8f && hungerPercent < 1 && timer >= wiggleStart)
 			{
-				rotation = (float)Math.Sin((timer - wiggleStart)* 2 * Trig.pi) * 0.05f;
+				rotation = (float)Math.Sin((timer - wiggleStart)* 2 * Num.pi) * 0.05f;
 			}
 			if (timer >= timeMax)
 			{
 				timer = 0;
 				rotation = 0;
 			}
-			UpdateTransforms();
+			UpdateTransforms(); 
 			base.Update();
 		}
 
@@ -84,7 +87,8 @@ namespace Project2D
 			DrawRectangleV(pos, hungerSize, backingColor);
 			base.Draw();
 			
-			if (hungerPercent >= 1f)
+			//this part is self explanitory
+			if (hungerPercent >= 1f) 
 			{
 				DrawText($"WOW! YOU WIN!!!", (int)pos.x - 44, (int)pos.y + 105, 20, RLColor.RED);
 			}

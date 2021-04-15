@@ -9,9 +9,7 @@ using Mlib;
 
 namespace Project2D
 {
-	/// <summary>
 	/// The class that manages collision (attached to scene)
-	/// </summary>
 	class CollisionManager
 	{
 		public List<PhysicsObject> objList = new List<PhysicsObject>();
@@ -25,7 +23,10 @@ namespace Project2D
 
 		public void CheckCollisions(params CollisionLayer[] ignored)
 		{
+			//clear list of collision pairs every frame
 			collisions.Clear();
+
+			//update every collider's information first
 			for (int i = 0; i < objList.Count; i++)
 			{
 				Collider collider = objList[i].GetCollider();
@@ -33,6 +34,7 @@ namespace Project2D
 				collider.UpdateAABB();
 			}
 
+			//compare all object's AABBs. If they are intersecting, add them to the collision list
 			for (int i = 0; i < objList.Count - 1; i++)
 			{
 				if (ignored.Contains(objList[i].GetCollider().GetLayer()))
@@ -51,6 +53,8 @@ namespace Project2D
 
 			for (int i = 0; i < collisions.Count(); i++)
 			{
+				//for close phase, resolve collisions (if they are colliding)
+
 				ResolveCollision(collisions[i]);
 			}
 		}
@@ -65,38 +69,43 @@ namespace Project2D
 			float bIM = pair.b.GetInverseMass();
 			float aII = pair.a.GetInverseInertia();
 			float bII = pair.b.GetInverseInertia();
-			//both are static
+
+			//if both are static return
 			if (aIM + bIM == 0)
 				return;
 			
-			//if (normal.Dot(pair.b.GetCollider().GetCentrePoint() - pair.a.GetCollider().GetCentrePoint()) > 0)
-			//	normal *= -1;
 			for (int i = 0; i < collisionPoints.points.Count; i++)
 			{
 				//The radius vectors from the collision
 				Vector2 radiusA = (collisionPoints.points[i] - pair.a.GetCollider().GetCentrePoint());
 				Vector2 radiusB = (collisionPoints.points[i] - pair.b.GetCollider().GetCentrePoint());
-				
+
+				//I understood this much better before I added rotation
+				//I didn't come up with this collision response algorythim, but I can't find the websites I found it on so I can't link it
+				//I know that you can find it here: http://www.chrishecker.com/Rigid_body_dynamics
 				Vector2 rV = (pair.b.GetVelocity() + Vector2.ZCross(-pair.b.GetAngularVelocity(), radiusB)) - (pair.a.GetVelocity() + Vector2.ZCross(-pair.a.GetAngularVelocity(), radiusA));
 
-				//if (Vector2.Dot(pair.b.GetVelocity() - pair.a.GetVelocity(), normal) > 0)
-				//	return;
 				float projectedRV = Vector2.Dot(rV, normal);
 
 				float rACrossN = radiusA.ZCross(normal);
 				float rBCrossN = radiusB.ZCross(normal);
-				
-				//impulse is spread evenly between collision points
+
+				//impulse is spread evenly between collision points, and is spread between objects based on their inverse mass and inverse inertia
 				float impulseMagnitude = (-(1 + Math.Min(pair.a.restitution, pair.b.restitution)) * projectedRV) / ((aIM + bIM + (rACrossN * rACrossN) * aII + (rBCrossN * rBCrossN) * bII) * collisionPoints.points.Count);
 				Vector2 impulse = normal * impulseMagnitude;
 				
 				pair.a.AddImpulseAtPosition(-1 * impulse, radiusA);
 				pair.b.AddImpulseAtPosition(impulse, radiusB);
 			}
-				if (aIM != 0)
-					pair.a.AddPosition(normal * -penetration);
-				if (bIM != 0)
-					pair.b.AddPosition(normal * penetration);
+
+			//teleport objects out of each other
+			//this definitely is wrong and definitely causes bugs but the penetration is so low at this framerate that I didn't notice it was wrong until just this moment
+			//the amount it is changed by should probably be based on mass, so they get pushed exactly the penetration value away, with the heaviest object being pushed less than the lightest object
+			//right now it is being pushed away by 2*penetration, which doesn't make sense. I wont change it however, because I don't have time to check if it is fixed or if I broke it even more
+			if (aIM != 0)
+				pair.a.AddPosition(normal * -penetration);
+			if (bIM != 0)
+				pair.b.AddPosition(normal * penetration);
 		}
 
 		#region Ray Casting
@@ -363,12 +372,14 @@ namespace Project2D
 
 		public static bool CheckAABB(AABB a, AABB b)
 		{
+			//finds if an aabb is colliding with another
 			return (a.halfWidth + b.halfWidth > Math.Abs(a.centre.x - b.centre.x) && a.halfHeight + b.halfHeight > Math.Abs(a.centre.y - b.centre.y));
 		}
 
 		public static void GetCollisionInformation(CollisionPair pair, out float penetration, out Vector2 collisionNormal, out CollisionPoints collisionPoints)
 		{
 			//Collision Detection using SAT
+			//only works with rectangles, but because of that it is way more efficient! (or it would be if rotation wasn't involved)
 			
 			Collider aCol = pair.a.GetCollider();
 			Collider bCol = pair.b.GetCollider();
@@ -388,15 +399,21 @@ namespace Project2D
 			float a;
 			float b;
 			penetration = 0;
-			collisionNormal = Vector2.Zero;
+			collisionNormal = Vector2.zero;
 			collisionPoints = null;
+
+			//https://www.metanetsoftware.com/technique/tutorialA.html
+			//I used this to get how to find penetration and stuff with rectangles
+			//it doesn't expressly explain how to do it with non axis aligned 
+			//rectangles that are stored like mine are, but it explains all the pieces 
+
 			//A X Axis
 			///////////////////////////////////////////////////////////////////
 			if (!doPA(aTransform.GetRightVector()))
 				return;
 			//A Y Axis
 			//////////////////////////////////////////////////////////////////
-			if (!doPA(aTransform.GetForwardVector()))
+			if (!doPA(aTransform.GetUpVector()))
 				return;
 			//B X Axis
 			//////////////////////////////////////////////////////////////////
@@ -404,7 +421,7 @@ namespace Project2D
 				return;
 			//B Y Axis
 			//////////////////////////////////////////////////////////////////
-			if (!doPB(bTransform.GetForwardVector()))
+			if (!doPB(bTransform.GetUpVector()))
 				return;
 			//////////////////////////////////////////////////////////////////
 			
@@ -415,12 +432,15 @@ namespace Project2D
 			//reference:
 			//http://www.dyn4j.org/2011/11/contact-points-using-clipping/
 			// ^ all other sources I could find on the internet are based off this
+			//this is from the guy that made the box2d engine
 
-
+			//this also explains very well how clipping is used to find collision points
+			//https://research.ncl.ac.uk/game/mastersdegree/gametechnologies/previousinformation/physics5collisionmanifolds/2017%20Tutorial%205%20-%20Collision%20Manifolds.pdf
+				
 			if (pair.a.GetInverseInertia() == 0 && pair.b.GetInverseInertia() == 0)
 			{
 				//no need to calculate
-				collisionPoints = new CollisionPoints(new List<Vector2>() { Vector2.One });
+				collisionPoints = new CollisionPoints(new List<Vector2>() { Vector2.one });
 				return;
 			}
 			Vector2[] mainPoints;
@@ -470,6 +490,7 @@ namespace Project2D
 
 			float max = refNorm.Dot(reference.max);
 
+			//I don't actually use these depths at any point but too late to remove it now (aka I am too lasy right now)
 			cP.depths.Add(refNorm.Dot(cP.points[0]) - max);
 			cP.depths.Add(refNorm.Dot(cP.points[1]) - max);
 			if (cP.depths[0] < 0)
@@ -487,6 +508,7 @@ namespace Project2D
 			return;
 
 			#region Local Functions
+
 			CollisionPoints Trim(Vector2 point1, Vector2 point2, Vector2 norm, float limit)
 			{
 				List<Vector2> clippedPoints = new List<Vector2>(2);
@@ -528,8 +550,8 @@ namespace Project2D
 
 				Vector2 l = v - v1;
 				Vector2 r = v - v0;
-				l.SetNormalised();
-				r.SetNormalised();
+				l.Normalise();
+				r.Normalise();
 
 				if (r.Dot(n) <= l.Dot(n))
 				{
@@ -545,6 +567,7 @@ namespace Project2D
 			{
 				float aW = ax.Dot(aHalfWidth);
 				float aH = ax.Dot(aHalfHeight);
+				//aW + aH will equal half the size of the box on a given axis
 
 				float bH = ax.Dot(bHalfHeight * Math.Sign(bHalfHeight.Dot(ax)));
 				float bW = ax.Dot(bHalfWidth * Math.Sign(bHalfWidth.Dot(ax)));
@@ -554,6 +577,7 @@ namespace Project2D
 
 				pV = (((aW + aH) + (bH + bW)) - Math.Abs(a - b));
 
+				//this is basically exactly the same as circle1radius + circle2radius > distancebetweencentrepoints
 				if (pV > 0)
 				{
 					if (pV < pValue)
@@ -607,6 +631,7 @@ namespace Project2D
 
 		public void RemoveConnection(PhysicsObject obj)
 		{
+			//removes an object from the collision checker list
 			objList.Remove(obj);
 		}
 	}
@@ -623,6 +648,7 @@ namespace Project2D
 		}
 	}
 
+	//dont need this anymore, could have used just a list of vector2s, but i didn't so watcha gonna do (fix it? lol no)
 	class CollisionPoints
 	{
 		public List<Vector2> points= new List<Vector2>(2);

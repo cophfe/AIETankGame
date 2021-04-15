@@ -13,18 +13,17 @@ namespace Project2D
     {
         static void Main(string[] args)
         {
-            Game game = new Game();
             int height = 1000, width = 1000;
             InitWindow(width, height, "gamer game for gamers");
-            game.Init();
+            Game.Init();
 
             while (!WindowShouldClose())
             {
-                game.Update();
-                game.Draw();
+                Game.Update();
+                Game.Draw();
             }
 
-            game.Shutdown();
+            Game.Shutdown();
 
             CloseWindow();
         }

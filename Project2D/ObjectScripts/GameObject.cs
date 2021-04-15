@@ -9,12 +9,8 @@ using static Raylib.Raylib;
 
 namespace Project2D
 {
-	/// <summary>
-	/// The most basic object type
-	/// </summary>
 	class GameObject
 	{
-		#region Variables
 		//scene tree stuff
 		protected GameObject parent = null;
 		protected List<GameObject> children = new List<GameObject>();
@@ -24,28 +20,30 @@ namespace Project2D
 		protected Matrix3 globalTransform = new Matrix3();
 
 		//drawing
-		protected bool isDrawn = false;
-		protected Sprite spriteManager;
+		protected bool isDrawn = false; //says if object is drawn or not
+		protected Sprite spriteManager; //the sprite object that is attached to the gameobject
+		protected float sortingOffset; //the value that parent objects are sorted by (everything else is sorted by it's sprite's sort value). its not a great system I admit
 
 		//local information
+		//local position, scale and rotation stored and converted to a matrix every frame
+		//(I think Finn said many games do it this way)
 		protected Vector2 position;
 		protected Vector2 scale;
 		protected float rotation;
-		protected float sortingOffset;
+
 		//physics
 		protected bool hasPhysics = false;
 
-		//id
-		static ulong idCounter = 0;
-		#endregion
+		//id (each gameobject has its own id)
+		static uint idCounter = 0;
 
 		#region Initiation
 		public GameObject()
 		{
-			hasPhysics = false;
-			Init(TextureName.None, Vector2.Zero, 1, 0, null, false);
+			Init(TextureName.None, Vector2.zero, 1, 0, null, false);
 		}
 
+		//scale is a float because It is best for x and y scaling to be of equal magnitude otherwise it can lead to some bugs, so i just decided to make it always start with a scale with equal magnitude
 		public GameObject(TextureName image, Vector2 position, float scale, float rotation = 0, GameObject parent = null, bool isDrawn = true, SpriteLayer layer = SpriteLayer.Midground)
 		{
 			Init(image, position, scale, rotation, parent, isDrawn, layer);
@@ -53,9 +51,10 @@ namespace Project2D
 
 		public GameObject(TextureName image)
 		{
-			Init(image, Vector2.Zero, 1, 0, null, true);
+			Init(image, Vector2.zero, 1, 0, null, true);
 		}
 
+		//all constructors are just using this (so I don't have to rewrite the same thing a billion times)
 		protected void Init(TextureName image, Vector2 position, float scale, float rotation, GameObject parent, bool isDrawn = true, SpriteLayer layer = SpriteLayer.Midground)
 		{
 			this.isDrawn = isDrawn;
@@ -68,14 +67,13 @@ namespace Project2D
 				parent.AddChild(this);
 
 			//position and scale will be zero if no values are given
-			localTransform = Matrix3.GetTranslation(position) * Matrix3.GetRotateZ(rotation) * Matrix3.GetScale(Vector2.One * scale);
+			localTransform = Matrix3.GetTranslation(position) * Matrix3.GetRotateZ(rotation) * Matrix3.GetScale(Vector2.one * scale);
 			this.position = position;
 			this.rotation = rotation;
-			this.scale = Vector2.One * scale;
+			this.scale = Vector2.one * scale;
 			sortingOffset = spriteManager.CurrentTexture().height / 2 * scale;
 			UpdateTransforms();
 		}
-
 		#endregion
 
 		#region Scene Tree Methods
@@ -118,7 +116,7 @@ namespace Project2D
 			}
 		}
 
-		protected float id;
+		protected float id; //the id of the object (set at initiation)
 
 		public float Id
 		{
@@ -128,6 +126,7 @@ namespace Project2D
 			}
 		}
 
+		//Draws the gameobject and it's children
 		public virtual void Draw()
 		{
 			if (isDrawn)
@@ -141,10 +140,13 @@ namespace Project2D
 			}
 		}
 
+		//children sorting happens whenever this is called
+		//(because it is almost never necessary unless it is a top level object)
 		public void SortChildren()
 		{
 			//using insertion sort because it is fast for when an array is almost sorted
 			//also it is stable which is important
+			//https://www.toptal.com/developers/sorting-algorithms/insertion-sort
 			GameObject cache;
 			int j;
 			for (int i = 1; i < children.Count; i++)
@@ -177,6 +179,7 @@ namespace Project2D
 			return sortingOffset;
 		}
 
+		//generally sorting offset is set to the bottom of the current texture, but it can be manually set if an object should be above everything else or under everything else
 		public void SetSortingOffset(float offset)
 		{
 			sortingOffset = offset;
@@ -198,6 +201,7 @@ namespace Project2D
 			return isDrawn;
 		}
 
+		//since gameobject is a class, it needs a clone function if you want to copy it
 		public virtual GameObject Clone()
 		{
 			GameObject g = new GameObject(TextureName.None, GlobalPosition, GlobalScale.x, GlobalRotation, parent, isDrawn);
@@ -210,6 +214,7 @@ namespace Project2D
 		#region Transformations
 		public virtual void UpdateTransforms()
 		{
+			//idk where this is supposed to go so it is going here
 			localTransform = Matrix3.GetTranslation(position) * Matrix3.GetRotateZ(rotation) * Matrix3.GetScale(scale);
 
 			if (parent == null)
@@ -234,7 +239,8 @@ namespace Project2D
 		public void AddRotation(float rad)
 		{
 			rotation += rad;
-			rotation %= Trig.pi * 2;
+			//make sure rotation does not add for infinity, limit to max rotation
+			rotation %= Num.pi * 2;
 		}
 
 		public void AddPosition(Vector2 pos)
@@ -262,8 +268,28 @@ namespace Project2D
 			}
 			set
 			{
+				//if there is no parent than you can just set the position
+				if (parent == null)
+				{
+					position = value;
+					return;
+				}
+
+				//tbh I used trial and error to get this, it is probably the least efficient thing ever
 				position = (localTransform * globalTransform.Inverse() * Matrix3.GetTranslation(value)).GetTranslation();
-				
+			}
+		}
+
+		public float LocalRotation
+		{
+			get
+			{
+				return rotation;
+			}
+			set
+			{
+				rotation = value;
+				rotation %= Num.pi * 2;
 			}
 		}
 
@@ -281,23 +307,10 @@ namespace Project2D
 					return;
 				}
 				rotation = (localTransform * globalTransform.Inverse() * Matrix3.GetRotateZ(value)).GetZRotation();
-				//It is worrying that this requires a negative to be correct
-				rotation %= Trig.pi * 2;
+				rotation %= Num.pi * 2;
 			}
 		}
-		public float LocalRotation
-		{
-			get
-			{
-				return rotation;
-			}
-			set
-			{
-				rotation = value;
-				rotation %= Trig.pi * 2;
-			}
-		}
-
+		
 		public Vector2 LocalScale
 		{
 			get
@@ -318,6 +331,11 @@ namespace Project2D
 			}
 			set
 			{
+				if (parent == null)
+				{
+					scale = value;
+					return;
+				}
 				scale = (localTransform * globalTransform.Inverse() * Matrix3.GetScale(value)).GetScale();
 			}
 		}

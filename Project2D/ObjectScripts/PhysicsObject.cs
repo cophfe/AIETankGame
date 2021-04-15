@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mlib;
-
 using Raylib;
 using static Raylib.Raylib;
 
@@ -12,24 +11,23 @@ namespace Project2D
 {
 	class PhysicsObject : GameObject
 	{
-		protected Collider collider = null;
+		protected Collider collider = null; //the collider connected to the gameobject
 
-		//protected Vector2 position;
+		//movement values
 		protected Vector2 velocity;
-		protected Vector2 force;
 		protected float angularVelocity;
-		protected float angularDrag;
+		protected Vector2 force;
 		protected float torque;
 
-		public float restitution;
-		public float density;
-		public float drag = 0f;
-		protected float mass = 1;
-		protected float iMass = 1;
-		protected float inertia = 1;
+		//other movement constants (constant for each object)
+		public float restitution; //bounciness of object. if it is more than one it will cause bugs
+		public float density; //how much mass an object has in a unit of area
+		public float drag = 0f; //the wind resistance on an object's velocity
+		protected float angularDrag; //the wind resistance on an object's angular velocity
+		protected float mass = 1; //how easy an object is to move
+		protected float inertia = 1; //how easy an object is to rotate
+		protected float iMass = 1; //inverse values are held because they are used a bunch for collisions
 		protected float iInertia = 1;
-
-		public float gravity = 0;
 
 		public PhysicsObject(TextureName image, Vector2 position, float scale, Collider collider = null, float drag = 0, float angularDrag = 0, float restitution = 0,  float rotation = 0, GameObject parent = null, float density = 1, bool isDynamic = true, bool isRotatable = true, bool isDrawn = true) : base(image, position, scale, rotation, parent, isDrawn)
 		{
@@ -43,7 +41,10 @@ namespace Project2D
 			if (collider != null)
 			{
 				collider.SetConnectedPhysicsObject(this);
+				//mass and inertia are set by the collider, using the physics object's density
 				collider.GetMass(out mass, out inertia);
+				//everything with a collider is added to the scene's collision manager
+				//should probably have made it so that it was the scene that this object is a decendant of but that would have been more difficult
 				Game.GetCurrentScene().GetCollisionManager().AddObject(this);
 			}
 			
@@ -54,12 +55,17 @@ namespace Project2D
 			}
 			else
 			{
+				//if it isn't dynamic it also isn't rotatable
 				isRotatable = false;
+				//inverse mass being set to zero makes the physics calculations all work out
 				mass = 0;
 				iMass = 0;
 			}
+
 			if (!isRotatable)
 			{
+				//if it isn't rotatable inertia and inverse of inertia are set to zero.
+				//inverse inertia being set to zero makes the physics calculations all work out
 				inertia = 0;
 				iInertia = 0;
 			}
@@ -78,31 +84,23 @@ namespace Project2D
 
 		public void SetCollider(Collider collider, Scene scene, bool recalculateMass = false)
 		{
-			if (this.collider != null)
-				RemoveCollider(scene);
 			this.collider = collider;
 			collider.SetConnectedPhysicsObject(this);
+
+			//you have the option of recalculating mass here
 			if (recalculateMass)
 			{
 				collider.GetMass(out mass, out inertia);
 				iMass = 1 / mass;
 				iInertia = 1 / inertia;
 			}
-			scene.GetCollisionManager().AddObject(this);
 		}
 
 		public void RemoveCollider(Scene scene)
 		{
-			this.collider = null;
+			collider = null;
 			scene.GetCollisionManager().RemoveConnection(this);
 		}
-
-		// NOTE:
-		// Xx Yx Zx
-		// Xy Yy Zy
-		// Xz Yz Zz
-		// ^  ^ Up vector
-		// Right Vector
 
 		public Vector2 GetForce()
 		{
@@ -151,6 +149,7 @@ namespace Project2D
 
 		//https://www.codeproject.com/Articles/1215961/Making-a-D-Physics-Engine-Mass-Inertia-and-Forces
 		//god damn there are no resources for calculation of inertia in this very specific situation
+		//although it shouldn't matter that much really
 		public void AddImpulseAtPosition(Vector2 impulse, Vector2 position)
 		{
 			velocity += iMass * impulse;
@@ -171,10 +170,8 @@ namespace Project2D
 
 				rotation += angularVelocity * Game.deltaTime;
 
-				//angularVelocity += (float)(torque * iInertia * deltaTime);
-				
-
-				force = Vector2.Zero;
+				//force is reset every frame
+				force = Vector2.zero;
 			}
 			base.Update();
 		}

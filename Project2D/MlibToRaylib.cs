@@ -9,6 +9,8 @@ using static Raylib.Raylib;
 
 namespace Raylib
 {
+	//since raylib's structures are all partial, I can edit them from here ez
+	//just added a constructor and implicit conversions between the raylib and mlib stuctures that I converted between the most
 	partial struct RLVector2
 	{
 		public RLVector2(float x, float y)

@@ -9,9 +9,8 @@ using static Raylib.Raylib;
 
 namespace Project2D
 {
-	/// <summary>
-	/// A manager for Raylib's camera system
-	/// </summary>
+	
+	// A manager for Raylib's camera system
 	class SmoothCamera : GameObject
 	{
 		Camera2D camera;
@@ -22,14 +21,18 @@ namespace Project2D
 		private Vector2 globalPosition;
 		GameObject targetObject = null;
 		Random rand = new Random(); 
-		Vector2 shake = Vector2.Zero;
+		Vector2 shake = Vector2.zero;
 		float shakeAmount;
 
 		public SmoothCamera(Scene parent, Vector2 position, float rotation, float zoom, Vector2 offset, params CollisionLayer[] ignoredLineOfSight) : base (TextureName.None , position, 1, rotation, parent, false)
 		{
 			this.offset = new Vector2(Game.screenWidth / 2 + offset.x, GetScreenHeight() / 2 + offset.y);
 			camera = new Camera2D { target = position, offset = position + new Vector2(GetScreenWidth() / 2 + offset.x, GetScreenHeight() / 2 + offset.y), zoom = zoom, rotation = rotation };
+			
+			//lineofsight ignores some collisions
 			LineOfSight.SetIgnored(ignoredLineOfSight);
+
+			//a vignette is rendered as a child object of the camera. please note I added this before I added UI to the scene, that's why it is not a UI object
 			GameObject vignette = new GameObject(TextureName.Vignette);
 			AddChild(vignette);
 			vignette.GetSprite().SetLayer(SpriteLayer.Foreground);
@@ -46,17 +49,21 @@ namespace Project2D
 
 		public override void Update()
 		{
+			//if a target object is specified, the target is set to it's position every update
+			//otherwise the target is set by other objects
 			if (targetObject != null)
 			{
 				Target(targetObject.GlobalPosition);
 			}
 
+			//camera should slowly move toward the target position
 			globalPosition = GlobalPosition;
 			if (globalPosition != target)
 			{
 				GlobalPosition = globalPosition + (target - globalPosition) * Game.deltaTime * smoothMultiplier;
 			}
 
+			//a shake variable is added based on the shake amount int. it is entirely random.
 			shake = new Vector2((float)(rand.NextDouble() * 2 - 1) * shakeAmount, (float)(rand.NextDouble() * 2 - 1) * shakeAmount);
 			
 			camera.target = GlobalPosition;
@@ -84,7 +91,6 @@ namespace Project2D
 		{
 			if (Game.lOS)
 			{
-				//target.y += 59;
 				LineOfSight.Update();
 			}
 		}
@@ -104,7 +110,7 @@ namespace Project2D
 			return offset;
 		}
 
-		public Vector2 GetMouseWorldPosition()
+		public Vector2 GetMouseWorldPosition() //GetMousePosition() does not factor in camera offset, this function does
 		{
 			if (on)
 				return (globalTransform * Matrix3.GetTranslation(GetMousePosition())).GetTranslation() - GetOffset();
@@ -127,7 +133,7 @@ namespace Project2D
 
 		public override void Draw()
 		{
-
+			//does not draw anything through here, camera children are drawn just before 2D camera is ended, basically acting as UI objects
 		}
 	}
 }

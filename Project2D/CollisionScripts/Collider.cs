@@ -9,24 +9,25 @@ using Mlib;
 
 namespace Project2D
 {
-	/// <summary>
-	/// A rectangle collider stored as a width vector, a height vector, and a centre point
-	/// </summary>
+	// A rectangle collider stored as a width vector, a height vector, and a centre point
 	class Collider
 	{
-		protected PhysicsObject connected;
 
-		protected Matrix3 globalTransform;
-		Vector2[] globalPoints = new Vector2[4];
-		Vector2 globalHalfHeight;
-		Vector2 globalHalfWidth;
-		Vector2 centrePoint;
+		//technically this class only needs to store halfHeight, halfWidth and the centrepoint to function 
+		//but it also stores some extras because the extras are used for collision and inside the collider is the place I decided to store them
+
+		protected PhysicsObject connected; //connected physics object, used to get globalTransform
+		protected Matrix3 globalTransform; 
+		Vector2[] globalPoints = new Vector2[4]; //since the collider is always a rectangle, there is always four points. This isn't needed for the version of SAT I'm using but it is necessary for calculating the collision point(s) and can be used for AABB
+		Vector2 globalHalfHeight; //basically the y axis from the globalTransform, with a magnitude the same as the half height of the collider
+		Vector2 globalHalfWidth; //perpendicular to half height, the same thing basically but for width
+		Vector2 centrePoint; //the centrepoint of the collider reletive to the connected physics object
 		
 		CollisionLayer layer;
 		
 		float halfWidth;
 		float halfHeight;
-		protected AABB aABB;
+		protected AABB aABB; //the axis aligned bounding box of the shape (recalculated every frame)
 
 		public void SetConnectedPhysicsObject(PhysicsObject newConnected)
 		{
@@ -53,11 +54,13 @@ namespace Project2D
 			this.layer = layer;
 		}
 
+		//gets a collider the same size as a texture
 		public static Collider FromTexture(Texture2D texture, CollisionLayer layer = CollisionLayer.Default)
 		{
 			return new Collider(-texture.width / 2, -texture.height / 2, -texture.width, -texture.height, layer);
 		}
 
+		//same thing as FromTexture but uses TextureName enum
 		public static Collider FromTextureName(TextureName textureName, CollisionLayer layer = CollisionLayer.Default)
 		{
 			Texture2D texture = Game.GetTextureFromName(textureName);
@@ -66,6 +69,7 @@ namespace Project2D
 
 		public void UpdateAABB()
 		{
+			//I did this before I converted the collider to the centrepoint & halfwidth vectors system so it uses the global points instead of using the halfwidth and height vectors
 			float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
 			float minY = float.PositiveInfinity, maxY = float.NegativeInfinity;
 			for (int i = 0; i < globalPoints.Length; i++)
@@ -96,12 +100,16 @@ namespace Project2D
 
 		public void GetMass(out float mass, out float inertia)
 		{
+			//super easy to get mass, just area x density:
 			float area = (float)Math.Abs((halfWidth * 2) * (halfHeight * 2));
 			mass =  area * connected.density;
-			float inert;
 
-			//OKAY I KNOW THIS IS TERRIBLE BUT THE ONLY WAY I FOUND TO GET INERTIA FOR A 2D OBJECT WAS FOR TRIANGLES
-			//also I now realize I could have used 2 triangles, not four, but shut up
+			//moment of inertia (or rotational inertia) is harder if you want it to be physically accurate, especially since the moment of inertia is a 3D concept. (I think second moment of area * density is it's equivelent in 2D?)
+			//I found an equation online that works with triangles (found below)
+			//other equations are available but they are all so suspiciously inconsistant that I had a heart attack and just used the first one I found
+			//I have a slightly stronger grasp on the concepts now and I think I would be able to just use the equation found here: https://en.wikipedia.org/wiki/List_of_second_moments_of_area (get the magnitude of the calculated vector and multiply it by density)
+			float inert;
+			//also I now realize I just had to calculate a single triangles here (instead of 2 triangles), but I didn't soo thats how the cookie gonna crumble
 			Vector2 a = centrePoint + new Vector2( -halfWidth, halfHeight);
 			Vector2 b = centrePoint + new Vector2( halfWidth, - halfHeight);
 			float triMass = connected.density * 0.5f * Math.Abs(a.ZCross(b));
@@ -121,6 +129,7 @@ namespace Project2D
 			globalHalfHeight = globalTransform * new Vector2(0, halfHeight);
 			Vector2 position = globalTransform.GetTranslation();
 			
+			//this basically converts the halfWidth and halfHeight values into local points, adds them to the centrepoint and transforms it using the global transform.
 			//minYminX
 			globalPoints[0] = globalTransform * (centrePoint + new Vector2(-halfWidth, -halfHeight)) + position;
 			//minYmaxX
@@ -165,6 +174,7 @@ namespace Project2D
 
 	struct AABB
 	{
+		//centre is global, the others are local
 		public float halfWidth;
 		public float halfHeight;
 		public Vector2 centre;
@@ -190,6 +200,7 @@ namespace Project2D
 			halfHeight = height / 2;
 		}
 
+		//this be pretty self explanitory
 		public static AABB GetAABBFromPoints(Vector2[] points)
 		{
 			float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
@@ -218,7 +229,7 @@ namespace Project2D
 		}
 	}
 
-	struct Hit
+	struct Hit //the info returned when the ray hits an object
 	{
 		public float distanceAlongRay;
 		public PhysicsObject objectHit;
@@ -226,7 +237,7 @@ namespace Project2D
 		public Hit(float distanceAlongRay, PhysicsObject colliderHit)
 		{
 			this.distanceAlongRay = distanceAlongRay;
-			this.objectHit = colliderHit;
+			objectHit = colliderHit;
 		}
 	}
 
@@ -235,7 +246,6 @@ namespace Project2D
 		Default,
 		Enemy,
 		Player,
-		Objects,
 		Count
 	}
 }

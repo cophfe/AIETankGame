@@ -1,0 +1,403 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Mlib</name>
+    </assembly>
+    <members>
+        <member name="M:Mlib.Colour.GetRed">
+            <summary>
+            Returns the red value from this colour
+            </summary>
+        </member>
+        <member name="M:Mlib.Colour.GetGreen">
+            <summary>
+            Returns the green value from this colour
+            </summary>
+        </member>
+        <member name="M:Mlib.Colour.GetBlue">
+            <summary>
+            Returns the blue value from this colour
+            </summary>
+        </member>
+        <member name="M:Mlib.Colour.GetAlpha">
+            <summary>
+            Returns the alpha value from this colour
+            </summary>
+        </member>
+        <member name="M:Mlib.Colour.SetRed(System.Byte)">
+            <summary>
+            Sets the red value of this colour
+            </summary>
+        </member>
+        <member name="M:Mlib.Colour.SetGreen(System.Byte)">
+            <summary>
+            Sets the green value of this colour
+            </summary>
+        </member>
+        <member name="M:Mlib.Colour.SetBlue(System.Byte)">
+            <summary>
+            Sets the blue value of this colour
+            </summary>
+        </member>
+        <member name="M:Mlib.Colour.SetAlpha(System.Byte)">
+            <summary>
+            Sets the alpha value of this colour
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.SetRotateX(System.Single)">
+            <summary>
+            Sets this to a 3D rotation Matrix around the X axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.SetRotateY(System.Single)">
+            <summary>
+            Sets this to a 3D rotation Matrix around the Y axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.SetRotateZ(System.Single)">
+            <summary>
+            Sets this to a 3D rotation Matrix around the Z axis (also is a 2D rotation matrix)
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.Inverse">
+            <summary>
+            Returns the inverse of the matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.SetTranslation(System.Single,System.Single)">
+            <summary>
+            Sets the translation of this 2D transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.SetTranslation(Mlib.Vector2)">
+            <summary>
+            Sets the translation of this 2D transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.SetScale(System.Single,System.Single)">
+            <summary>
+            Sets this matrix to be a 2D transformation matrix that scales vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.SetScale(Mlib.Vector2)">
+            <summary>
+            Sets this matrix to be a 2D transformation matrix that scales vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetScale">
+            <summary>
+            Returns the scale of this 2D transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetScaleBeforeSquareRoot">
+            <summary>
+            Returns the (squared individually on each axis) scale of this 2D transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetScaleX">
+            <summary>
+            Returns the X scale of this 2D transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetScaleY">
+            <summary>
+            Returns the Y scale of this 2D transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetScale(System.Single,System.Single)">
+            <summary>
+            Returns a 2D scaling matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetScale(Mlib.Vector2)">
+            <summary>
+            Returns a 2D scaling matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetRotateX(System.Single)">
+            <summary>
+            Returns a 2D rotation matrix around the X axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetRotateY(System.Single)">
+            <summary>
+            Returns a 2D rotation matrix around the Y axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetRotateZ(System.Single)">
+            <summary>
+            Returns a 2D rotation matrix around the Z axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetTranslation(Mlib.Vector2)">
+            <summary>
+            Returns a 2D transformation matrix that translates a point by a specified vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetTranslation(System.Single,System.Single)">
+            <summary>
+            Returns a 2D transformation matrix that translates a point by a specified vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetTranslation">
+            <summary>
+            Return the 2D translation vector from this transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetZRotation">
+            <summary>
+            Returns the rotation stored in this rotation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetAllTransformations(Mlib.Vector2@,Mlib.Vector2@,System.Single@)">
+            <summary>
+            Returns the position, scale and rotation values stored inside a 2D translation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetUpVector">
+            <summary>
+            Gets the y axis from this matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix3.GetRightVector">
+            <summary>
+            Gets the x axis from this matrix
+            </summary>
+        </member>
+        <member name="P:Mlib.Matrix4.Identity">
+            <summary>
+            Returns an identity Matrix
+            </summary>
+        </member>
+        <member name="P:Mlib.Matrix4.Zero">
+            <summary>
+            returns a zeroed matrix 
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.SetRotateX(System.Single)">
+            <summary>
+            Sets this to a rotation Matrix around the X axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.SetRotateY(System.Single)">
+            <summary>
+            Sets this to a rotation Matrix around the Y axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.SetRotateZ(System.Single)">
+            <summary>
+            Sets this to a rotation Matrix around the Z axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.SetTranslation(System.Single,System.Single,System.Single)">
+            <summary>
+            Sets the translation of this 3D transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.SetTranslation(Mlib.Vector3)">
+            <summary>
+            Sets the translation of this 3D transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.SetScale(System.Single,System.Single,System.Single)">
+            <summary>
+            Sets this matrix to be a 3D transformation matrix that scales vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.SetScale(Mlib.Vector3)">
+            <summary>
+            Sets this matrix to be a 3D transformation matrix that scales vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.GetScale(System.Single,System.Single,System.Single)">
+            <summary>
+            Returns a 3D transformation matrix that scales vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.GetScale(Mlib.Vector3)">
+            <summary>
+            Returns a 3D transformation matrix that scales vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.GetRotateX(System.Single)">
+            <summary>
+            Returns a 3D rotation Matrix around the X axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.GetRotateY(System.Single)">
+            <summary>
+            Returns a 3D rotation Matrix around the Y axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.GetRotateZ(System.Single)">
+            <summary>
+            Returns a 3D rotation Matrix around the Z axis
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.GetTranslation(Mlib.Vector3)">
+            <summary>
+            Returns a 3D transformation matrix that translates a point by a specified vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.GetTranslation(System.Single,System.Single,System.Single)">
+            <summary>
+            Returns a 3D transformation matrix that translates a point by a specified vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Matrix4.GetTranslation">
+            <summary>
+            Return the 3D translation vector from this transformation matrix
+            </summary>
+        </member>
+        <member name="M:Mlib.Num.Lerp(System.Single,System.Single,System.Single)">
+            <summary>
+            Linearly interpolates between two floats
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.Dot(Mlib.Vector2)">
+            <summary>
+            Returns the dot product of this vector and another vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.Dot(Mlib.Vector2,Mlib.Vector2)">
+            <summary>
+            Returns the dot product of two vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.Rotate(System.Single)">
+            <summary>
+            Rotates the vector by an angle
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.Rotated(System.Single)">
+            <summary>
+            Returns this vector rotated by an angle
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.Magnitude">
+            <summary>
+            Returns the magnitude, or length, of the vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.MagnitudeSquared">
+            <summary>
+            Returns the squared magnitude of the vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.Normalise">
+            <summary>
+            Normalises this vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.Normalised">
+            <summary>
+            Returns the normalised version of this vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.GetAngle(Mlib.Vector2,Mlib.Vector2)">
+            <summary>
+            Gets the angle between two vectors. Vectors should be normalised first
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.GetAngle(Mlib.Vector2)">
+            <summary>
+            Gets the angle between the current vector and v. Requires v to be normalised first.
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.ZCross(Mlib.Vector2)">
+            <summary>
+            Returns the z value of the cross product between this and another vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.ZCross(Mlib.Vector2,Mlib.Vector2)">
+            <summary>
+            Returns the z value of the cross product between two vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.ZCross(Mlib.Vector2,System.Single)">
+            <summary>
+            basically returns the perpendicular vector multiplied by a float, rotated the opposite direction from what it is normally when making a perpendicular vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.ZCross(System.Single,Mlib.Vector2)">
+            <summary>
+            basically returns the perpendicular vector multiplied by a float
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector2.Lerp(Mlib.Vector2,Mlib.Vector2,System.Single)">
+            <summary>
+            Linearly interpolates between two vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector3.Cross(Mlib.Vector3)">
+            <summary>
+            Returns the cross product of this vector and another vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector3.Cross(Mlib.Vector3,Mlib.Vector3)">
+            <summary>
+            returns the cross product of two vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector3.Dot(Mlib.Vector3,Mlib.Vector3)">
+            <summary>
+            Returns the dot product of two vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector3.Dot(Mlib.Vector3)">
+            <summary>
+            Returns the dot product of this vector and another vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector3.Magnitude">
+            <summary>
+            Returns the magnitude, or length, of the vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector3.MagnitudeSquared">
+            <summary>
+            Returns the squared magnitude of the vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector3.Normalize">
+            <summary>
+            Normalises the vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector4.Cross(Mlib.Vector4)">
+            <summary>
+            Returns the cross product of this vector and another vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector4.Cross(Mlib.Vector4,Mlib.Vector4)">
+            <summary>
+            Returns the cross product of two vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector4.Dot(Mlib.Vector4)">
+            <summary>
+            Returns the dot product of this vector and another vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector4.Dot(Mlib.Vector4,Mlib.Vector4)">
+            <summary>
+            Returns the dot product of two vectors
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector4.Magnitude">
+            <summary>
+            Returns the magnitude of the vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector4.MagnitudeSquared">
+            <summary>
+            Returns the squared magnitude of the vector
+            </summary>
+        </member>
+        <member name="M:Mlib.Vector4.Normalise">
+            <summary>
+            Normalises this vector
+            </summary>
+        </member>
+    </members>
+</doc>
